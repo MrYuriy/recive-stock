@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+
+{% block navigation %}
+    <nav class="navigation">
+      <a class="btn btn-outline-secondary" role="button" style="float: right;" href="{% url 'user:user-create' %}">Create User</a>
+    </nav>
+{% endblock %}
+
+{% block content %}
+      {% if user_list %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead class="thead-dark">
+            <tr>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Update</th>
+              <th>Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+              {% for employee in user_list %}
+              <tr>
+                  <td class="text-dark" href="">{{ employee.username }}</td>
+                  <td class="text-dark" href="">{{ employee.role }}</td>
+                  <td><a class="text-info" href="{% url 'user:user-update' pk=employee.id %}">Update</a></td>
+                  <td><a style="color: rgb(252, 61, 3);" href="{% url 'user:user-delete' pk=employee.id %}">Delete</a></td>
+              </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+        
+          
+        {% else %}
+        <p>The are no user in Employees</p>
+        {% endif %}
+        
+{% endblock %}
