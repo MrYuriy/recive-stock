@@ -1,7 +1,10 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from recive_stock import settings
-
+from datetime import datetime
+from google.cloud import storage
+import os
+import uuid
 
 class ReasoneComment(models.Model):
     RECEPTIONS_CHOISES = [
@@ -13,6 +16,36 @@ class ReasoneComment(models.Model):
 
     def __str__(self) -> str:
         return self.name
+    
+def custom_upload_path(instance, filename):
+    main_path = datetime.now().strftime("%Y/%m/%d/")
+    syfix_name = (datetime.now().strftime("%H%M%S")) + f"{uuid.uuid4()}"
+    filename, file_extension = os.path.splitext(filename)
+    return f"{main_path}{instance.custom_prefix}_{syfix_name}{file_extension}"
+
+
+class ImageModel(models.Model):
+    custom_prefix = models.CharField(max_length=50, blank=True)
+    image_data = models.ImageField(upload_to=custom_upload_path)
+
+    def __str__(self):
+        return self.new_filename()  # Call the method to get the new filename
+
+    def new_filename(self):
+        return os.path.basename(self.image_data.name)
+
+    def delete(self, *args, **kwargs):
+        self.delete_image_from_bucket()
+        super().delete(*args, **kwargs)
+
+    def delete_image_from_bucket(self):
+        bucket_name = settings.GS_BUCKET_NAME
+        file_path = str(self.image_data)
+        credentials = settings.GS_CREDENTIALS
+        client = storage.Client(credentials=credentials)
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(file_path)
+        blob.delete()
 
 
 class Location(models.Model):
@@ -82,7 +115,7 @@ class Delivery(models.Model):
     date_recive = models.DateTimeField()
     recive_unit = models.CharField(choices=RECIVE_UNIT, max_length=10)
     transaction = models.TextField(blank=True) 
-    #Img_link field
+    images_url = models.ManyToManyField(ImageModel, blank=True)
 
     def __str__(self):
         return str(self.pre_advice_nr)

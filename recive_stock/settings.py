@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from google.oauth2 import service_account
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "user",
     "crispy_forms",
     "crispy_bootstrap4",
@@ -47,7 +49,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
+     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -115,7 +119,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 ASSETS_ROOT = "/static/assets"
 
-MEDIA_URL = "/media/"
+# MEDIA_URL = "/media/"
 
 
 # Default primary key field type
@@ -123,6 +127,24 @@ MEDIA_URL = "/media/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+
+
+
+# Google Cloud Storage settings
+GS_BUCKET_NAME = os.environ["GS_BUCKET_NAME"]
+GS_PROJECT_ID = os.environ["GS_PROJECT_ID"]
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+    os.path.join(BASE_DIR, "cred.json")
+)
+DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+
+GS_AUTO_CREATE_BUCKET = True
+
+# Static and media settings
+MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
+#MEDIA_ROOT = os.path.join(BASE_DIR, MEDIA_URL)
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(BASE_DIR, "cred.json")
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 CORS_ORIGIN_ALLOW_ALL = True
