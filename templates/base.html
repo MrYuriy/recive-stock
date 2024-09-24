@@ -28,3 +28,36 @@
     {% endblock %}
 </body>
 </html>
+
+<script>
+    function searchSupplier() {
+        const input = document.getElementById('supplier_company_search').value;
+        const suggestionsDiv = document.getElementById('supplier_suggestions');
+    
+        // Dummy suppliers data for testing
+        const suppliers = {{ suppliers|safe }};
+        console.log(suppliers);
+    
+        // Filter suppliers based on user input
+        const filteredSuppliers = suppliers.filter(supplier => supplier.name.toLowerCase().includes(input.toLowerCase()));
+    
+        // Generate HTML for suggestions
+        const suggestionsHTML = filteredSuppliers.map(supplier => `<div data-id="${supplier.id}">${supplier.name}</div>`).join('');
+    
+        // Update the suggestionsDiv with the generated HTML
+        suggestionsDiv.innerHTML = suggestionsHTML;
+    }
+    
+    function selectSupplier(event) {
+        const selectedSupplierId = event.target.getAttribute('data-id');
+        const selectedSupplierInput = document.getElementById('selected_supplier_id');
+        const supplierSearchInput = document.getElementById('supplier_company_search');
+    
+        if (selectedSupplierId) {
+            selectedSupplierInput.value = selectedSupplierId;
+            supplierSearchInput.value = event.target.innerText;
+            document.getElementById('supplier_suggestions').innerHTML = '';  // Clear suggestions
+        }
+    }
+
+</script>    

@@ -97,6 +97,7 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = []
 AUTH_USER_MODEL = "user.User"
+LOGIN_REDIRECT_URL = "/delivery-stock/"
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
