@@ -145,6 +145,19 @@ GS_AUTO_CREATE_BUCKET = True
 MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
 #MEDIA_ROOT = os.path.join(BASE_DIR, MEDIA_URL)
 
+STORAGES = {
+    'default': {
+        'BACKEND': 'storages.backends.gcloud.GoogleCloudStorage',
+        'OPTIONS': {
+            'bucket_name': GS_BUCKET_NAME,
+            'credentials': GS_CREDENTIALS,  # Optional, only needed if not using the environment variable
+        },
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
+
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(BASE_DIR, "cred.json")
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
