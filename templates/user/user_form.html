@@ -1,10 +1,14 @@
 {% extends 'base.html' %}
 {% load crispy_forms_filters %}
+{% load static %}
+
 
 {% block navigation %}
     <nav class="navigation">
       {% comment %} <a class="btn btn-secondary" role="button" href="{% url 'delivery:home' %}">Do głównej</a> {% endcomment %}
-      <a class="btn btn-outline-secondary" role="button" href="{% url 'user:user-list' %}">Wróć</a>
+      <a class="btn btn-outline-secondary" role="button" href="{% url 'user:user-list' %}">
+        <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+      </a>
     </nav>
 {% endblock %}
 

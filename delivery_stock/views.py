@@ -14,9 +14,11 @@ from django.db import IntegrityError, transaction
 class HomeView(LoginRequiredMixin, View):
     template_name = "index.html"
 
-    # write_report_gs()
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
+    
+def admin_panel(request):
+    return render(request, "delivery_stock/admin_panel.html")
 
 
 class SelectReceptionView(LoginRequiredMixin, View):
@@ -208,4 +210,6 @@ class DeleveryDetailView(LoginRequiredMixin, View):
         context = self.get_context_data(delivery_id=delivery_id)
 
         return render(request, "delivery_stock/delivery_detail.html", context)
+
+
 

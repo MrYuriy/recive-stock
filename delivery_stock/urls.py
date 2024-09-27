@@ -6,7 +6,8 @@ from delivery_stock.views import (
     DeliveryImageAdd, 
     DeliverySecondRecCreateView,
     DeliveryStorageView, 
-    HomeView, SelectReceptionView
+    HomeView, SelectReceptionView,
+    admin_panel
 )
 
 urlpatterns = [
@@ -17,6 +18,8 @@ urlpatterns = [
     path("add-image/", DeliveryImageAdd.as_view(), name="add_image"),
     path("storage/", DeliveryStorageView.as_view(), name="delivery_storage"),
     path("<int:pk>/detail/", DeleveryDetailView.as_view(), name="delivery_detail"),
+    path("admin-panel/", admin_panel, name="admin_panel"),
+
 ]
 
 app_name = "delivery_stock"

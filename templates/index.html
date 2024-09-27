@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load crispy_forms_filters %}
+{% load static %}
 
 {% block title %}{% endblock %}
 
@@ -13,6 +15,12 @@
     style="font-size: 30px; padding: 10px;">Sprawdź bazę 
 </a>
 <br>
+{%if request.user.role == 'admin' or request.user.is_superuser %}
+    <a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+    role="button" href="{% url 'delivery_stock:admin_panel' %}" 
+    style="font-size: 30px; padding: 10px;">ADMIN PANEL </a><br>
+{%endif%}
+
 {% if request.user.is_authenticated %}
     <form action="{% url 'logout' %}" method="post" class="btn btn-outline-secondary d-flex align-items-center justify-content-center">
       {% csrf_token %}

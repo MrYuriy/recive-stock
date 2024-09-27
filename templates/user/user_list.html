@@ -1,10 +1,19 @@
 {% extends "base.html" %}
-
+{% load crispy_forms_filters %}
+{% load static %}
 
 {% block navigation %}
-    <nav class="navigation">
-      <a class="btn btn-outline-secondary" role="button" style="float: right;" href="{% url 'user:user-create' %}">Create User</a>
-    </nav>
+  <nav class="navigation">
+    <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:delivery_storage' %}" title="Wróć">
+      <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+    </a>
+
+    <a class="btn btn-outline-secondary" role="button" style="float: right;" href="{% url 'user:user-create' %}" title="Dodać użytkownika">
+      <img src="{% static '/img/user-plus-light.svg' %}" alt="Dodać użytkownika">
+    </a>
+
+    {% comment %} <a class="btn btn-outline-secondary" role="button" style="float: right;" href="{% url 'user:user-create' %}">Create User</a> {% endcomment %}
+  </nav>
 {% endblock %}
 
 {% block content %}
@@ -24,8 +33,16 @@
               <tr>
                   <td class="text-dark" href="">{{ employee.username }}</td>
                   <td class="text-dark" href="">{{ employee.role }}</td>
-                  <td><a class="text-info" href="{% url 'user:user-update' pk=employee.id %}">Update</a></td>
-                  <td><a style="color: rgb(252, 61, 3);" href="{% url 'user:user-delete' pk=employee.id %}">Delete</a></td>
+                  <td>
+                    <a class="text-info" href="{% url 'user:user-update' pk=employee.id %}">
+                      <img src="{% static '/img/user-gear-light.svg' %}" alt="Dodać użytkownika">
+                    </a>
+                  </td>
+                  <td>
+                    <a style="color: rgb(252, 61, 3);" href="{% url 'user:user-delete' pk=employee.id %}">
+                      <img src="{% static '/img/user-minus-light.svg' %}" alt="Dodać użytkownika">
+                    </a>
+                  </td>
               </tr>
           {% endfor %}
           </tbody>
