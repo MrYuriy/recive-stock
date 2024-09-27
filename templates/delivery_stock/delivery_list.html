@@ -42,7 +42,7 @@
                 <tbody>
                     {% for delivery in delivery_list %}
                     <tr>
-                        <td><a style="text-decoration:none" class="link-dark" href="">{{ delivery.identifier }}</a></td>
+                        <td><a style="text-decoration:none" class="link-dark" href="{% url 'delivery_stock:delivery_detail' pk=delivery.id %}">{{ delivery.identifier }}</a></td>
                         <td>{{ delivery.date_recive|date:"d-m-Y H:i" }}</td>
                         <td>{{ delivery.recive_location }}</td>
                         <td>{{ delivery.location }}</td>

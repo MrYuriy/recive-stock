@@ -116,6 +116,8 @@ class Delivery(models.Model):
     recive_unit = models.CharField(choices=RECIVE_UNIT, max_length=10)
     transaction = models.TextField(blank=True) 
     images_url = models.ManyToManyField(ImageModel, blank=True)
+    lovo_link = models.TextField(blank=True, null=True)
+    lovo_name = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return str(self.pre_advice_nr)

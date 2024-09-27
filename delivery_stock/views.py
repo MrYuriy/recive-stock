@@ -4,6 +4,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
+
+from recive_stock.settings import GS_BUCKET_NAME
 from .models import Delivery, ImageModel, Location, ReasoneComment, Supplier
 
 from django.db import IntegrityError, transaction
@@ -89,7 +91,7 @@ class DeliverySecondRecCreateView(LoginRequiredMixin, View):
         )
     
 class DeliveryImageAdd(LoginRequiredMixin, View):
-    template_name = "delivery/delivery_image_add.html"
+    template_name = "delivery_stock/delivery_image_add.html"
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -184,7 +186,26 @@ class DeliveryStorageView(LoginRequiredMixin, View):
 
         return render(request, "delivery_stock/delivery_list.html", context)
 
+class DeleveryDetailView(LoginRequiredMixin, View):
+    def get_context_data(self, delivery_id):
+        context = {}
+        delivery = get_object_or_404(Delivery, id=delivery_id)
+        date_recive = delivery.date_recive.strftime("%d.%m.%Y")
+        context["date_recive"] = date_recive
 
+        if delivery.images_url.all():
+            context["image_urls"] = []
+            for url in delivery.images_url.all():
+                image_path = (
+                    f"https://storage.googleapis.com/{GS_BUCKET_NAME}/{url.image_data}"
+                )
+                context["image_urls"].append(image_path)
+        context["delivery"] = delivery
 
+        return context
+    def get(self, request, *args, **kwargs):
+        delivery_id = self.kwargs.get("pk")
+        context = self.get_context_data(delivery_id=delivery_id)
 
+        return render(request, "delivery_stock/delivery_detail.html", context)
 

@@ -1,13 +1,7 @@
 {% extends 'base.html' %}
 {% load crispy_forms_filters %}
 
-{% comment %} {% block navigation %}
-    <nav class="navigation">
-        <a class="btn btn-secondary" role="button" href="{% url 'delivery:home' %}">Do głównej</a>
-        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery:select_receprion' %}">Wróć</a>
-        
-    </nav>
-{% endblock %} {% endcomment %}
+
 
 {% block content %}
 <form method="post" action="{% url 'delivery_stock:add_image' %}" enctype="multipart/form-data">
