@@ -8,8 +8,11 @@
    role="button" href="{% url 'delivery_stock:select_receprion' %}" 
    style="font-size: 30px; padding: 10px;">Nowe Delivery</a>
 <br>
-
-
+<a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+    role="button" href="{% url 'delivery_stock:delivery_storage' %}" 
+    style="font-size: 30px; padding: 10px;">Sprawdź bazę 
+</a>
+<br>
 {% if request.user.is_authenticated %}
     <form action="{% url 'logout' %}" method="post" class="btn btn-outline-secondary d-flex align-items-center justify-content-center">
       {% csrf_token %}

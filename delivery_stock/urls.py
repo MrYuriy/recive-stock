@@ -3,7 +3,8 @@ from django.urls import path
 from delivery_stock.views import (
     DeliveryFirsrRecCreateView, 
     DeliveryImageAdd, 
-    DeliverySecondRecCreateView, 
+    DeliverySecondRecCreateView,
+    DeliveryStorageView, 
     HomeView, SelectReceptionView
 )
 
@@ -13,6 +14,7 @@ urlpatterns = [
     path("first-rec/create/", DeliveryFirsrRecCreateView.as_view(), name="first_rec_del_create"),
     path("second-rec/create/", DeliverySecondRecCreateView.as_view(), name="second_rec_del_create"),
     path("add-image/", DeliveryImageAdd.as_view(), name="add_image"),
+    path("storage/", DeliveryStorageView.as_view(), name="delivery_storage"),
 ]
 
 app_name = "delivery_stock"

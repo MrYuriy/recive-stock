@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.shortcuts import get_object_or_404, redirect, render
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
@@ -100,7 +101,6 @@ class DeliveryImageAdd(LoginRequiredMixin, View):
         context = self.get_context_data()
         context["delivery_id"] = delivery_id
         context["back_to_detail"] = back_to_detail
-        print("!!!!!!!!!!",back_to_detail)
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
@@ -123,3 +123,68 @@ class DeliveryImageAdd(LoginRequiredMixin, View):
         if back_to_detail:
             return redirect("delivery_stock:delivery_detail", pk=delivery_id) 
         return render(request, "delivery_stock/select_reception.html")
+
+
+class DeliveryStorageView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/storeg_filter_page.html"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        context = {}
+        identifier = request.POST.get("identifier")
+        pre_advice = request.POST.get("pre_advice")
+        status = request.POST.get("status")
+        date_recive = request.POST.get("date_recive")
+        location = request.POST.get("location")
+        recive_loc = request.POST.get("recive_loc")
+
+        queryset = Delivery.objects.all().select_related(
+            "supplier_company", "recive_location", "location"
+        )
+
+        if status and status != "None":
+            queryset = queryset.filter(location__work_zone=status)
+        if identifier and identifier != 'None':
+            queryset = queryset.filter(identifier__icontains=identifier)
+        if pre_advice and pre_advice != 'None':
+            queryset = queryset.filter(nr_order=pre_advice)
+        if date_recive and date_recive and date_recive != 'None':
+            date_recive_dt = datetime.strptime(date_recive, "%Y-%m-%d")
+            queryset = queryset.filter(date_recive__date=date_recive_dt)
+        if location and location != 'None':
+            queryset = queryset.filter(location__name__icontains=location)
+        if recive_loc and recive_loc != 'None':
+            queryset = queryset.filter(recive_location__name=recive_loc)
+
+        page = request.POST.get('page', 1)
+        paginator = Paginator(queryset.order_by("-date_recive"), 300)
+        try:
+            deliveries = paginator.page(page)
+        except PageNotAnInteger:
+            deliveries = paginator.page(1)
+        except EmptyPage:
+            deliveries = paginator.page(paginator.num_pages)
+
+        context["delivery_list"] = deliveries
+        context["filters"] = {
+            "identifier": identifier,
+            "pre_advice": pre_advice,
+            "date_recive": date_recive,
+            "status": status,
+            "location": location,
+            "recive_loc": recive_loc,
+        }
+
+        return render(request, "delivery_stock/delivery_list.html", context)
+
+
+
+
+
