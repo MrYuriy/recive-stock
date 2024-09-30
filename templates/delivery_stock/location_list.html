@@ -1,0 +1,48 @@
+{% extends 'pc_base.html' %}
+{% load crispy_forms_filters %}
+{% load static %}
+
+{% block navigation %}
+    <nav class="navigation">
+        <a class="btn btn-secondary" style="margin-left: 30px;" role="button" href="{% url 'delivery_stock:home' %}">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:admin_panel' %}">
+            <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+        </a>
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:location_create' %}">
+            <img src="{% static '/img/plus-light.svg' %}" alt="Add">
+        </a>    
+    </nav>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="width: 90%;">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            
+                <table class="table table-sm">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Location_name</th>
+                            <th>Work Zone</th>
+                        </tr>   
+                    </thead>
+                    <tbody>
+                        {% for location in location_list %}
+                        <tr>
+                            <td><a style="text-decoration:none" 
+                                class="link-dark " 
+                                href="{% url 'delivery_stock:location_update' pk=location.id %}">
+                                {{ location.name }}
+                            </a></td>
+                            <td>{{ location.get_work_zone_display}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+           
+        </div>
+    </div>
+</div>
+{% endblock %}

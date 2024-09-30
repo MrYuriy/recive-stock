@@ -296,3 +296,88 @@ class SupplierCreateView(LoginRequiredMixin, View):
         return redirect(reverse("delivery_stock:supplier_list"))
 
 
+class LocationListView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/location_list.html"
+    def get_context_data(self, **kwargs):
+        context = {}
+        locations = Location.objects.all()
+        context["location_list"] = locations
+        return context
+    
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context=context)
+
+
+class LocationUpdateView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/location_update.html"
+
+    def get_context_data(self, locatio_id):
+        context = {}
+        location = Location.objects.get(id=locatio_id)
+        context["location"] = location
+        return context 
+
+    def get(self, request, *args, **kwargs):
+        location_id = self.kwargs.get("pk")
+        context = self.get_context_data(locatio_id=location_id)
+        return render(request, self.template_name, context=context) 
+    
+    def post(self, request, *args, **kwargs):
+        location_id = self.kwargs.get("pk")
+        location_name = self.request.POST.get("location_name")
+        work_zone = self.request.POST.get("work_zone")
+        delete_status = self.request.POST.get("delete")
+        context = self.get_context_data(locatio_id=location_id)
+        context["error_message"] = ""
+        
+        location = Location.objects.get(id=location_id)
+
+        if location.name in ["1R", "2R", "Shiped", "Utulizacja"]:
+            context["error_message"] = "Ta lokalizacja jest ważna, nie można jej usunąć ani zmienić"
+            return render(request, self.template_name, context)
+
+        if delete_status:
+            if len(Delivery.objects.filter(location=location))>0:
+                context["error_message"] ="Ta lokalizacja nie jest pusta, wykonaj relokację"
+                return render(request, self.template_name, context)
+            location.delete()
+            return redirect(reverse("delivery:location_list"))
+
+        if location_name and location_name != location.name:
+            location.name = location_name
+        
+        if work_zone and work_zone != location.work_zone:
+            location.work_zone = work_zone
+        location.save()
+        return redirect(reverse("delivery:location_list"))
+
+
+class LocationCreateView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/location_create.html"
+
+    def get_context_data(self):
+        context = {}
+        context["WORKZON_CHOICES"] = Location.WORKZON_CHOICES
+        return context 
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context=context) 
+
+    def post(self, request, *args, **kwargs):
+        location_name = self.request.POST.get("location_name")
+        work_zone = self.request.POST.get("work_zone")
+        context = self.get_context_data()
+        try:
+            Location.objects.create(
+                name=location_name,
+                work_zone=work_zone
+            )
+        except IntegrityError as e:
+                context["error_message"] = (
+                    "ta lokalizacja już istnieje"
+                )
+                return render(request, self.template_name, context=context) 
+
+        return redirect(reverse("delivery:location_list"))

@@ -6,7 +6,10 @@ from delivery_stock.views import (
     DeliveryImageAdd, 
     DeliverySecondRecCreateView,
     DeliveryStorageView, 
-    HomeView, SelectReceptionView,
+    HomeView,
+    LocationCreateView,
+    LocationListView,
+    LocationUpdateView, SelectReceptionView,
     SupplierCreateView,
     SupplierListView,
     SupplierUpdateView,
@@ -29,6 +32,14 @@ urlpatterns = [
         SupplierUpdateView.as_view(),
         name="supplier_update",
     ),
+    path("location-list/", LocationListView.as_view(), name="location_list"),
+    path("location-create/", LocationCreateView.as_view(), name="location_create"),
+    path(
+        "<int:pk>/location-update/",
+        LocationUpdateView.as_view(),
+        name="location_update"
+        ),
+
 
 ]
 
