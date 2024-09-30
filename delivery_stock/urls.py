@@ -7,6 +7,9 @@ from delivery_stock.views import (
     DeliverySecondRecCreateView,
     DeliveryStorageView, 
     HomeView, SelectReceptionView,
+    SupplierCreateView,
+    SupplierListView,
+    SupplierUpdateView,
     admin_panel
 )
 
@@ -19,6 +22,13 @@ urlpatterns = [
     path("storage/", DeliveryStorageView.as_view(), name="delivery_storage"),
     path("<int:pk>/detail/", DeleveryDetailView.as_view(), name="delivery_detail"),
     path("admin-panel/", admin_panel, name="admin_panel"),
+    path("supplier-list/", SupplierListView.as_view(), name="supplier_list"),
+    path("supplier-create/", SupplierCreateView.as_view(), name="supplier_create"),
+    path(
+        "<int:pk>/supplier-update/",
+        SupplierUpdateView.as_view(),
+        name="supplier_update",
+    ),
 
 ]
 

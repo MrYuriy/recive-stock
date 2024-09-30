@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse
 from django.views import View
 
 from recive_stock.settings import GS_BUCKET_NAME
@@ -211,5 +212,87 @@ class DeleveryDetailView(LoginRequiredMixin, View):
 
         return render(request, "delivery_stock/delivery_detail.html", context)
 
+
+class SupplierListView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/supplier_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        suppliers = Supplier.objects.all()
+        context["supplier_list"] = suppliers
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context=context)
+
+
+class SupplierUpdateView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/supplier_update.html"
+
+    def get_context_data(self, supplier_id):
+        context = {}
+        supplier = Supplier.objects.get(id=supplier_id)
+        context["supplier"] = supplier
+        return context
+
+    def get(self, request, *args, **kwargs):
+        supplier_id = self.kwargs.get("pk")
+        context = self.get_context_data(supplier_id=supplier_id)
+        return render(request, self.template_name, context=context)
+
+    def post(self, request, *args, **kwargs):
+        supplier_id = self.kwargs.get("pk")
+        wms_id = self.request.POST.get("wms_id")
+        name = self.request.POST.get("sup_name")
+        supplier = Supplier.objects.get(id=supplier_id)
+        context = self.get_context_data(supplier_id=supplier_id)
+        with transaction.atomic():
+            try:
+                if wms_id:
+                    supplier.supplier_wms_id = wms_id
+                if name:
+                    supplier.name = name
+                supplier.save()
+            except IntegrityError as e:
+                if "unique_supplier_wms_id" in str(e):
+                    context["error_message"] = (
+                        "Supplier with this WMS ID already exists"
+                    )
+                else:
+                    context["error_message"] = (
+                        "An error occurred while saving the supplier"
+                    )
+                return render(request, self.template_name, context)
+
+        return redirect(reverse("delivery_stock:supplier_list"))
+
+
+class SupplierCreateView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/supplier_create.html"
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        wms_id = self.request.POST.get("wms_id")
+        name = self.request.POST.get("sup_name")
+        context = {"error_message": ""}
+        with transaction.atomic():
+            try:
+                supplier = Supplier(name=name, supplier_wms_id=wms_id)
+                supplier.save()
+            except IntegrityError as e:
+                if "unique_supplier_wms_id" in str(e):
+                    context["error_message"] = (
+                        "Supplier with this WMS ID already exists"
+                    )
+                else:
+                    context["error_message"] = (
+                        "An error occurred while saving the supplier"
+                    )
+                return render(request, self.template_name, context)
+
+        return redirect(reverse("delivery_stock:supplier_list"))
 
 
