@@ -10,9 +10,12 @@ from delivery_stock.views import (
     LocationCreateView,
     LocationListView,
     LocationUpdateView, SelectReceptionView,
+    SuplierSKUCreateView,
     SupplierCreateView,
     SupplierListView,
     SupplierUpdateView,
+    SuplierSKUListView,
+    SuplierSKUUpdateView,
     admin_panel
 )
 
@@ -39,8 +42,13 @@ urlpatterns = [
         LocationUpdateView.as_view(),
         name="location_update"
         ),
-
-
+    path("sku-list/", SuplierSKUListView.as_view(), name="sku_list"),
+    path("sku-create/", SuplierSKUCreateView.as_view(), name="sku_create"),
+    path(
+        "<int:pk>/sku-update/",
+        SuplierSKUUpdateView.as_view(),
+        name="sku_update"
+        ),
 ]
 
 app_name = "delivery_stock"

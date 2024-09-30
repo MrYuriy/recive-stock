@@ -76,6 +76,9 @@ class SuplierSKU(models.Model):
     sku = models.IntegerField()
     deskription = models.CharField(max_length=200)
     barcode = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return (f"{self.sku} - {self.deskription}")
     
 
 class Supplier(models.Model):
@@ -116,6 +119,7 @@ class Delivery(models.Model):
     recive_unit = models.CharField(choices=RECIVE_UNIT, max_length=10)
     transaction = models.TextField(blank=True) 
     images_url = models.ManyToManyField(ImageModel, blank=True)
+    suplier_sku = models.ManyToManyField(SuplierSKU, blank=True)
     lovo_link = models.TextField(blank=True, null=True)
     lovo_name = models.TextField(blank=True, null=True)
 
