@@ -122,6 +122,8 @@ class Delivery(models.Model):
     suplier_sku = models.ManyToManyField(SuplierSKU, blank=True)
     lovo_link = models.TextField(blank=True, null=True)
     lovo_name = models.TextField(blank=True, null=True)
+    complite_status = models.BooleanField(default=False)
+
 
     def __str__(self):
         return str(self.pre_advice_nr)

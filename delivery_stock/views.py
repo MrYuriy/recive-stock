@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views import View
 
+from delivery_stock.utils import relocate_or_get_error
 from recive_stock.settings import GS_BUCKET_NAME
 from .models import Delivery, ImageModel, Location, ReasoneComment, Supplier, SuplierSKU
 
@@ -485,4 +486,28 @@ class SuplierSKUUpdateView(LoginRequiredMixin, View):
             suplier_sku.deskription = deskription
         suplier_sku.save()
         return redirect(reverse("delivery_stock:sku_list"))
-    
+
+
+class RelocationView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/relocation.html"
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        identifier = request.POST.get("identifier")
+        to_location = request.POST.get("to_location")
+        print(identifier)
+        print(to_location)
+        context = relocate_or_get_error(
+            identifier=identifier, 
+            to_location=to_location, 
+            request=request
+            )
+        if context["status"]:
+            return render(
+                request,
+                self.template_name,
+            )
+        else:
+            return render(request, self.template_name, context)
