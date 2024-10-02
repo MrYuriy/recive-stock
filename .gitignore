@@ -10,4 +10,6 @@ htmlcov/
 data/
 staticfiles/
 users.xls
+reasons.xls
+suppliers.xls
 cred.json
