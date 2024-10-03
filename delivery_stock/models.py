@@ -9,7 +9,7 @@ import uuid
 class ReasoneComment(models.Model):
     RECEPTIONS_CHOISES = [
         ("first", "first"),
-        ("srcond", "second"),
+        ("second", "second"),
     ]
     reception = models.CharField(choices=RECEPTIONS_CHOISES, max_length=10)
     name = models.CharField(max_length=100)
@@ -105,8 +105,11 @@ class Delivery(models.Model):
     ]
 
     identifier = models.BigIntegerField(unique=True)
-    supplier_company = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True)
-    pre_advice_nr = models.CharField( max_length=40, null=True)
+    supplier_company = models.ForeignKey(
+        Supplier, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    pre_advice_nr = models.CharField(max_length=40, null=True , blank=True)
+    master_nr = models.CharField(max_length=40, null=True, blank=True)
     reasone_comment = models.TextField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     recive_location = models.ForeignKey(
@@ -116,15 +119,19 @@ class Delivery(models.Model):
         Location, on_delete=models.CASCADE, related_name="location"
     )
     date_recive = models.DateTimeField()
+    date_complite = models.DateTimeField(null=True , blank=True)
     recive_unit = models.CharField(choices=RECIVE_UNIT, max_length=10)
+    qty_unit = models.IntegerField()
     transaction = models.TextField(blank=True) 
     images_url = models.ManyToManyField(ImageModel, blank=True)
     suplier_sku = models.ManyToManyField(SuplierSKU, blank=True)
     lovo_link = models.TextField(blank=True, null=True)
     lovo_name = models.TextField(blank=True, null=True)
     complite_status = models.BooleanField(default=False)
+    tir_nr = models.CharField(max_length=40, null=True, blank=True)
+    not_sys_barcode = models.CharField(max_length=40, blank=True, null=True)
 
 
     def __str__(self):
-        return str(self.pre_advice_nr)
+        return str({self.pre_advice_nr})
     
