@@ -1,4 +1,9 @@
 from delivery_stock.models import Delivery, Location
+import io
+from reportlab.pdfgen import canvas
+
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 
 def relocate_or_get_error(identifier, to_location, *args, **kwargs):
@@ -41,3 +46,28 @@ def relocate_or_get_error(identifier, to_location, *args, **kwargs):
         delivery.save()
         return {"status": status}
     return {"status": status, "error_message": error_message} | auto_in_val
+
+
+
+def gen_pdf_recive_report(delivery):
+    date_recive = delivery.date_recive.strftime("%Y-%m-%d")
+    supplier = delivery.supplier_company.name
+    warehous_adres = "Centrum Logistyczne Leroy Merlin\nul. Łowicka 33\n99-120 Piątek"
+    recive_person = delivery.user.full_name
+    recive_unit = delivery.recive_unit
+    qty_unit = delivery.qty_unit
+    reasone_comment = f"Podczas rozładunku stwierdzono {delivery.reasone_comment}"
+
+    recive_report_path = "static/reports/recive_report.jpg"
+
+    buffer = io.BytesIO()
+    pdfmetrics.registerFont(TTFont("FreeSans", "freesans/FreeSans.ttf"))
+    my_canvas = canvas.Canvas(buffer)
+    my_canvas.drawImage(recive_report_path, 0, 0, width=602, height=840)
+    my_canvas.setFont("FreeSans", 10)
+
+
+    my_canvas.showPage()
+    my_canvas.save()
+    buffer.seek(0)
+    return buffer

@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block content %}
-<form method="post" action="{% url 'delivery_stock:first_rec_del_create' %}" enctype="multipart/form-data">
+<form method="post" action="{% url 'delivery_stock:second_rec_del_create' %}" enctype="multipart/form-data">
     {% csrf_token %}
 
     <div class="input-group mb-3" type="number">
@@ -27,6 +27,16 @@
     </div>
 
     <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">Pre-Advise: </span>
+        <input type="text" style="width: 65%;" name="pre_advice">
+    </div>
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">Master_Pre-Advise: </span>
+        <input type="text" style="width: 65%;" name="master_nr">
+    </div>
+
+    <div class="input-group mb-3" type="number">
         <select id="tape_of_unit" name="tape_of_unit" class="form-select" required>
             <option  disabled selected value="" >Jednostka</option>
             {% for unit in recive_units %}
@@ -35,24 +45,28 @@
         </select> 
     </div>
 
+    <div class="input-group mb-3" type="number", >
+        <select name="reasones" class="form-select" required>
+            <option  disabled selected value="" >Wybierz powód</option>
+            {% for reasone in reasones %}
+                <option value="{{ reasone.name }}">{{ reasone.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <div class="input-group mb-3" type="number">
         <span class="input-group-text" style="width: 35%;" >QTY: </span>
         <input type="number" style="width: 65%;" name="qty_unit" required>
     </div>
 
+
     <div class="input-group mb-3" type="number">
-        <span class="input-group-text" style="width: 35%;" >Tir/container: </span>
-        <input type="text" style="width: 65%;" name="tir_nr" required>
+        <span class="input-group-text" style="width: 35%;">EAN: </span>
+        <input type="number" style="width: 65%;" name="ean">
     </div>
 
-    
     <div class="input-group mb-3" type="number", >
-        <select name="reasones" class="form-select" required>
-            <option  disabled selected value="" >Wybierz powód</option>
-            {% for reasone in reasones %}
-                <option value="{{ reasone.id }}">{{ reasone.name }}</option>
-            {% endfor %}
-        </select>
+        <input name="extra_comment" type="text" class="form-control" placeholder="Co dalej stało się z produktem?">
     </div>
 
         <input type="hidden" name="recive_location" id="recive_location" value={{ reception }} required>

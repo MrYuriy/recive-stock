@@ -54,15 +54,69 @@ class DeliveryFirsrRecCreateView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         supplier_id = request.POST.get("selected_supplier_id", None)
+        tape_of_unit = request.POST.get("tape_of_unit", None)
+        qty = request.POST.get("qty_unit", None)
+        reason = request.POST.get("reasones")
+        tir_nr = request.POST.get("tir_nr")
+        date_recive = datetime.now()
+        recive_lock, _ = Location.objects.get_or_create(name="1R-STOCK", work_zone=1)
+
+        with transaction.atomic():
+            delivery = Delivery.objects.create(
+                supplier_company=get_object_or_404(Supplier, id=supplier_id),
+                reasone_comment=reason,
+                user=self.request.user,
+                recive_location=recive_lock,
+                location=recive_lock,
+                date_recive=date_recive,
+                recive_unit=tape_of_unit,
+                qty_unit=qty,
+                tir_nr=tir_nr
+            )
+            delivery.save()
+            print(delivery.id)
+        return render(
+            request, "delivery_stock/delivery_image_add.html", {"delivery_id": delivery.id}
+        )
+    
+class DeliverySecondRecCreateView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/delivery_second_rec_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        supliers_list = Supplier.objects.all()
+        suppliers = [
+            {"id": sup.id, "name": f"{sup.name} - {sup.supplier_wms_id}"}
+            for sup in supliers_list
+        ]
+        context["recive_units"] = [ unit[0] for unit in Delivery.RECIVE_UNIT]
+        reasones_list = ReasoneComment.objects.filter(reception="second")
+        reasones = [{"id": reas.id, "name": reas.name} for reas in reasones_list]
+        context["suppliers"] = suppliers
+        context["reasones"] = reasones
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        supplier_id = request.POST.get("selected_supplier_id", None)
         pre_advice = request.POST.get("pre_advice", None)
         tape_of_unit = request.POST.get("tape_of_unit", None)
+        master_nr = request.POST.get("master_nr")
         qty = request.POST.get("qty_unit", None)
         ean = request.POST.get("ean", None)
         reason = request.POST.get("reasones")
         extra_comment = request.POST.get("extra_comment", "")
         date_recive = datetime.now()
-        recive_lock, _ = Location.objects.get_or_create(name="1R-STOCK", work_zone=1)
+        recive_lock, _ = Location.objects.get_or_create(name="2R-STOCK", work_zone=1)
 
+        if reason in ["brak kodu ean",] or not ean:
+            supplier_sku = None
+        else:
+            supplier_sku = SuplierSKU.objects.filter(barcode__icontains=ean).first()
+        
         with transaction.atomic():
             delivery = Delivery.objects.create(
                 supplier_company=get_object_or_404(Supplier, id=supplier_id),
@@ -73,27 +127,18 @@ class DeliveryFirsrRecCreateView(LoginRequiredMixin, View):
                 location=recive_lock,
                 date_recive=date_recive,
                 recive_unit=tape_of_unit,
-
+                master_nr=master_nr,
+                qty_unit=qty
             )
+            if not supplier_sku and ean:
+                delivery.not_sys_barcode = ean
+            if supplier_sku:
+                delivery.suplier_sku.add(supplier_sku)
             delivery.save()
         return render(
             request, "delivery_stock/delivery_image_add.html", {"delivery_id": delivery.id}
         )
     
-class DeliverySecondRecCreateView(LoginRequiredMixin, View):
-    template_name = "delivery_stock/delivery_second_rec_create.html"
-
-    def get_context_data(self, **kwargs):
-        return {}
-
-    def get(self, request, *args, **kwargs):
-        context = self.get_context_data()
-        return render(request, self.template_name, context)
-
-    def post(self, request, *args, **kwargs):
-        return render(
-            request, "delivery/delivery_image_add.html", {"delivery_id": 1}
-        )
     
 class DeliveryImageAdd(LoginRequiredMixin, View):
     template_name = "delivery_stock/delivery_image_add.html"
@@ -113,7 +158,6 @@ class DeliveryImageAdd(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         delivery_id = self.request.POST.get("delivery_id")
         back_to_detail = self.request.POST.get("back_to_detail")
-        print(back_to_detail)
         if request.FILES:
             delivery = Delivery.objects.get(id=delivery_id)
             index = 1
@@ -121,7 +165,7 @@ class DeliveryImageAdd(LoginRequiredMixin, View):
             while f"images_url_{index}" in request.FILES:
                 image_file = request.FILES[f"images_url_{index}"]
                 images.append(
-                    ImageModel(custom_prefix=delivery.pre_advice_nr, image_data=image_file)
+                    ImageModel(custom_prefix=delivery.identifier, image_data=image_file)
                 )
                 index += 1
             image_instances = ImageModel.objects.bulk_create(images)
@@ -497,8 +541,6 @@ class RelocationView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         identifier = request.POST.get("identifier")
         to_location = request.POST.get("to_location")
-        print(identifier)
-        print(to_location)
         context = relocate_or_get_error(
             identifier=identifier, 
             to_location=to_location, 
