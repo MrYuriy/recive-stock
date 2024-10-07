@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -6,9 +7,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views import View
 
-from delivery_stock.utils import relocate_or_get_error
+from delivery_stock.utils import relocate_or_get_error, save_images_for_object
 from recive_stock.settings import GS_BUCKET_NAME
-from .models import Delivery, ImageModel, Location, ReasoneComment, Supplier, SuplierSKU
+from .models import (
+    Delivery, ImageModel, 
+    Location, ReasoneComment, 
+    Supplier, SuplierSKU,
+    FirstRecDelivery
+    )
 
 from django.db import IntegrityError, transaction
 from django.db.models import Q
@@ -41,7 +47,7 @@ class DeliveryFirsrRecCreateView(LoginRequiredMixin, View):
             {"id": sup.id, "name": f"{sup.name} - {sup.supplier_wms_id}"}
             for sup in supliers_list
         ]
-        context["recive_units"] = [ unit[0] for unit in Delivery.RECIVE_UNIT]
+        context["recive_units"] = [ unit[0] for unit in FirstRecDelivery.RECIVE_UNIT]
         reasones_list = ReasoneComment.objects.filter(reception="first")
         reasones = [{"id": reas.id, "name": reas.name} for reas in reasones_list]
         context["suppliers"] = suppliers
@@ -53,16 +59,17 @@ class DeliveryFirsrRecCreateView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        supplier_id = request.POST.get("selected_supplier_id", None)
-        tape_of_unit = request.POST.get("tape_of_unit", None)
-        qty = request.POST.get("qty_unit", None)
+        supplier_id = request.POST.get("selected_supplier_id")
+        tape_of_unit = request.POST.get("tape_of_unit")
+        qty = request.POST.get("qty_unit")
         reason = request.POST.get("reasones")
         tir_nr = request.POST.get("tir_nr")
+        container_nr = request.POST.get("container_nr") or None
         date_recive = datetime.now()
         recive_lock, _ = Location.objects.get_or_create(name="1R-STOCK", work_zone=1)
 
         with transaction.atomic():
-            delivery = Delivery.objects.create(
+            delivery = FirstRecDelivery.objects.create(
                 supplier_company=get_object_or_404(Supplier, id=supplier_id),
                 reasone_comment=reason,
                 user=self.request.user,
@@ -71,12 +78,17 @@ class DeliveryFirsrRecCreateView(LoginRequiredMixin, View):
                 date_recive=date_recive,
                 recive_unit=tape_of_unit,
                 qty_unit=qty,
-                tir_nr=tir_nr
+                tir_nr=tir_nr,
+                container_nr=container_nr
             )
             delivery.save()
-            print(delivery.id)
         return render(
-            request, "delivery_stock/delivery_image_add.html", {"delivery_id": delivery.id}
+            request,
+            "delivery_stock/delivery_image_add.html", 
+            {
+                "obj_id": delivery.id,
+                "obj_model": "FirstRecDelivery",
+            }
         )
     
 class DeliverySecondRecCreateView(LoginRequiredMixin, View):
@@ -140,39 +152,41 @@ class DeliverySecondRecCreateView(LoginRequiredMixin, View):
         )
     
     
-class DeliveryImageAdd(LoginRequiredMixin, View):
-    template_name = "delivery_stock/delivery_image_add.html"
+class DeliveryImageAddView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/image_add.html"
 
     def get_context_data(self, **kwargs):
         context = {}
         return context
 
     def get(self, request, *args, **kwargs):
-        delivery_id = int(self.request.GET.get("delivery_id"))
+        obj_id = self.request.GET.get("obj_id")
+        obj_model = self.request.GET.get("obj_model")
         back_to_detail = self.request.GET.get("back_to_detail")
+
         context = self.get_context_data()
-        context["delivery_id"] = delivery_id
+        context["obj_id"] = obj_id
+        context["obj_model"] = obj_model
         context["back_to_detail"] = back_to_detail
+
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        delivery_id = self.request.POST.get("delivery_id")
+        obj_id = self.request.POST.get("obj_id")
+        obj_model = self.request.POST.get("obj_model")
         back_to_detail = self.request.POST.get("back_to_detail")
+        # Отримати модель динамічно
+        ModelClass = globals().get(obj_model)
+        
+        if ModelClass is None:
+            return HttpResponseBadRequest(f"Unknown model: {obj_model}")
+        obj = ModelClass.objects.get(id=obj_id)
+
         if request.FILES:
-            delivery = Delivery.objects.get(id=delivery_id)
-            index = 1
-            images = []
-            while f"images_url_{index}" in request.FILES:
-                image_file = request.FILES[f"images_url_{index}"]
-                images.append(
-                    ImageModel(custom_prefix=delivery.identifier, image_data=image_file)
-                )
-                index += 1
-            image_instances = ImageModel.objects.bulk_create(images)
-            delivery.images_url.add(*image_instances)
-            delivery.save()
+            save_images_for_object(request, obj, obj.identifier)
+
         if back_to_detail:
-            return redirect("delivery_stock:delivery_detail", pk=delivery_id) 
+            return redirect(f"{obj_model.lower()}_detail", pk=obj_id)
         return render(request, "delivery_stock/select_reception.html")
 
 
@@ -238,7 +252,7 @@ class DeliveryStorageView(LoginRequiredMixin, View):
 class DeleveryDetailView(LoginRequiredMixin, View):
     def get_context_data(self, delivery_id):
         context = {}
-        delivery = get_object_or_404(Delivery, id=delivery_id)
+        delivery = get_object_or_404(FirstRecDelivery, id=delivery_id)
         date_recive = delivery.date_recive.strftime("%d.%m.%Y")
         context["date_recive"] = date_recive
 

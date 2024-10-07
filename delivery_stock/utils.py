@@ -1,4 +1,4 @@
-from delivery_stock.models import Delivery, Location
+from delivery_stock.models import Delivery, ImageModel, Location
 import io
 from reportlab.pdfgen import canvas
 
@@ -71,3 +71,16 @@ def gen_pdf_recive_report(delivery):
     my_canvas.save()
     buffer.seek(0)
     return buffer
+
+
+def save_images_for_object(request, obj, prefix):
+        index = 1
+        images = []
+        while f"images_url_{index}" in request.FILES:
+            image_file = request.FILES[f"images_url_{index}"]
+            images.append(ImageModel(custom_prefix=prefix, image_data=image_file))
+            index += 1
+        if images:
+            image_instances = ImageModel.objects.bulk_create(images)
+            obj.images_url.add(*image_instances)
+            obj.save()

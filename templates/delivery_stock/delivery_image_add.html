@@ -6,8 +6,10 @@
 {% block content %}
 <form method="post" action="{% url 'delivery_stock:add_image' %}" enctype="multipart/form-data">
     {% csrf_token %}
-    <input type="hidden" name="delivery_id" id="delivery_id" value="{{ delivery_id }}" required>
-    <input type="hidden" name="back_to_detail" id="back_to_detail" value="{{ back_to_detail }}"> 
+    <input type="hidden" name="obj_id" id="obj_id" value="{{ obj_id }}" required>
+    <input type="hidden" name="back_to_detail" id="back_to_detail" value="{{ back_to_detail }}">
+    <input type="hidden" name="obj_model" id="obj_model" value="{{ obj_model }}">
+
     <div class="mb-3" id="imag-fields">
         <input name="images_url_1" class="form-control" type="file" id="formFileMultiple">
         <button type="button" onclick="addImageField()" style="width: 100%;">+</button>
@@ -25,8 +27,6 @@
         
         const newImageField = document.createElement('div');
         newImageField.className = 'mb-3';
-
-
 
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
