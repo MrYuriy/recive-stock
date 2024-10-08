@@ -1,10 +1,12 @@
 from datetime import datetime
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from .models import Delivery, FirstRecDelivery
+from .models import DeliveryContainer, FirstRecDelivery, SecondRecDelivery
 import uuid
 
 
+@receiver(pre_save, sender=DeliveryContainer)
+@receiver(pre_save, sender=SecondRecDelivery)
 @receiver(pre_save, sender=FirstRecDelivery)
 def generate_delivery_number(sender, instance, **kwargs):
     unik_id = str(uuid.uuid4())

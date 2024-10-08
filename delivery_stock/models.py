@@ -100,26 +100,20 @@ class Delivery(models.Model):
     supplier_company = models.ForeignKey(
         Supplier, on_delete=models.SET_NULL, null=True, blank=True
     )
-    location = models.ForeignKey(
-        Location, on_delete=models.CASCADE, related_name="location"
-    )
-    recive_location = models.ForeignKey(
-        Location, on_delete=models.CASCADE, related_name="recive_location"
-    )
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_recive = models.DateTimeField()
     date_complite = models.DateTimeField(null=True , blank=True)
 
 
     def __str__(self):
-        return self.identifier
+        return str(self.identifier)
     
 
 class FirstRecDelivery(Delivery):
     RECIVE_UNIT = [
         ("szt.", "szt."),
         ("pall.", "pall"),
-        ("pacz.", "pacz.")
+        ("pacz.", "pacz."),
     ]
     
     qty_unit = models.IntegerField()
@@ -128,44 +122,59 @@ class FirstRecDelivery(Delivery):
     tir_nr = models.CharField(max_length=40)
     container_nr = models.CharField(max_length=40, null=True, blank=True)
     reasone_comment = models.TextField()
+    location = models.ForeignKey(
+        Location, on_delete=models.CASCADE, related_name="location",
+        null=True, blank=True
+    )
+    recive_location = models.ForeignKey(
+        Location, on_delete=models.CASCADE, related_name="recive_location"
+    )
 
 
-# class Delivery(models.Model):
 
-#     RECIVE_UNIT = [
-#         ("szt.", "szt."),
-#         ("pall.", "pall"),
-#         ("pacz.", "pacz.")
-#     ]
+class SecondRecDelivery(Delivery):
+    pre_advice_nr = models.CharField(max_length=40, null=True , blank=True)
+    master_nr = models.CharField(max_length=40, null=True, blank=True)
+    tir_nr = models.CharField(max_length=40, null=True, blank=True)
 
-#     identifier = models.BigIntegerField(unique=True)
-#     supplier_company = models.ForeignKey(
-#         Supplier, on_delete=models.SET_NULL, null=True, blank=True
-#     )
-#     pre_advice_nr = models.CharField(max_length=40, null=True , blank=True)
-#     master_nr = models.CharField(max_length=40, null=True, blank=True)
-#     reasone_comment = models.TextField()
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-#     recive_location = models.ForeignKey(
-#         Location, on_delete=models.CASCADE, related_name="recive_location"
-#     )
-#     location = models.ForeignKey(
-#         Location, on_delete=models.CASCADE, related_name="location"
-#     )
-#     date_recive = models.DateTimeField()
-#     date_complite = models.DateTimeField(null=True , blank=True)
-#     recive_unit = models.CharField(choices=RECIVE_UNIT, max_length=10)
-#     qty_unit = models.IntegerField()
-#     transaction = models.TextField(blank=True) 
-#     images_url = models.ManyToManyField(ImageModel, blank=True)
-#     suplier_sku = models.ManyToManyField(SuplierSKU, blank=True)
-#     lovo_link = models.TextField(blank=True, null=True)
-#     lovo_name = models.TextField(blank=True, null=True)
-#     complite_status = models.BooleanField(default=False)
-#     tir_nr = models.CharField(max_length=40, null=True, blank=True)
-#     not_sys_barcode = models.CharField(max_length=40, blank=True, null=True)
+    def __str__(self):
+        return f"{self.identifier} {self.pre_advice_nr} {self.tir_nr}"
 
 
-#     def __str__(self):
-#         return str({self.pre_advice_nr})
+class DeliveryContainer(models.Model):
+    identifier = models.BigIntegerField(unique=True)
+    recive_location = models.ForeignKey(
+        Location, on_delete=models.CASCADE, related_name="recive_location_2r"
+    )
+    location = models.ForeignKey(
+        Location, on_delete=models.CASCADE, related_name="location_2r"
+    )
+    lovo_link = models.TextField(blank=True, null=True)
+    lovo_name = models.TextField(blank=True, null=True)
+    delivery = models.ForeignKey(SecondRecDelivery, on_delete=models.CASCADE)
+    date_complite = models.DateTimeField(null=True , blank=True)
+
+    def __str__(self) -> str:
+        return f"{self.identifier} {self.delivery.identifier}"
     
+
+class ContainerLine(models.Model):
+    RECIVE_UNIT = [
+        ("szt.", "szt."),
+        ("pall. mix.", "pall. mix."),
+        ("pall.full.", "pall.full."),
+        ("pacz.", "pacz."),
+    ]
+
+    reasone_comment = models.TextField()
+    qty_unit = models.IntegerField()
+    recive_unit = models.CharField(choices=RECIVE_UNIT, max_length=10)
+    not_sys_barcode = models.CharField(max_length=40, blank=True, null=True)
+    suplier_sku = models.ForeignKey(
+        SuplierSKU, on_delete=models.CASCADE, blank=True, null=True
+    )
+    container = models.ForeignKey(DeliveryContainer, on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return f"{self.suplier_sku.sku} {self.container.identifier}"
+

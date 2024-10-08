@@ -36,41 +36,7 @@
         <input type="text" style="width: 65%;" name="master_nr">
     </div>
 
-    <div class="input-group mb-3" type="number">
-        <select id="tape_of_unit" name="tape_of_unit" class="form-select" required>
-            <option  disabled selected value="" >Jednostka</option>
-            {% for unit in recive_units %}
-                <option value="{{ unit }}">{{ unit }}</option>
-            {% endfor %}
-        </select> 
-    </div>
-
-    <div class="input-group mb-3" type="number", >
-        <select name="reasones" class="form-select" required>
-            <option  disabled selected value="" >Wybierz powód</option>
-            {% for reasone in reasones %}
-                <option value="{{ reasone.name }}">{{ reasone.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div class="input-group mb-3" type="number">
-        <span class="input-group-text" style="width: 35%;" >QTY: </span>
-        <input type="number" style="width: 65%;" name="qty_unit" required>
-    </div>
-
-
-    <div class="input-group mb-3" type="number">
-        <span class="input-group-text" style="width: 35%;">EAN: </span>
-        <input type="number" style="width: 65%;" name="ean">
-    </div>
-
-    <div class="input-group mb-3" type="number", >
-        <input name="extra_comment" type="text" class="form-control" placeholder="Co dalej stało się z produktem?">
-    </div>
-
-        <input type="hidden" name="recive_location" id="recive_location" value={{ reception }} required>
-        <input class="btn btn-secondary" type="submit" value="Submit" style="width: 100%;"> 
+    <input class="btn btn-secondary" type="submit" value="Submit" style="width: 100%;"> 
 </form>
 
 {% if error_message %}

@@ -5,6 +5,8 @@ from delivery_stock.views import (
     DeliveryFirsrRecCreateView, 
     DeliveryImageAddView, 
     DeliverySecondRecCreateView,
+    DeliveryContainerView,
+    ContainerLineView,
     DeliveryStorageView, 
     HomeView,
     LocationCreateView,
@@ -17,7 +19,7 @@ from delivery_stock.views import (
     SupplierUpdateView,
     SuplierSKUListView,
     SuplierSKUUpdateView,
-    admin_panel
+    admin_panel,
 )
 
 urlpatterns = [
@@ -25,6 +27,8 @@ urlpatterns = [
     path("reception/", SelectReceptionView.as_view(), name="select_receprion"),
     path("first-rec/create/", DeliveryFirsrRecCreateView.as_view(), name="first_rec_del_create"),
     path("second-rec/create/", DeliverySecondRecCreateView.as_view(), name="second_rec_del_create"),
+    path("add-delivery-container/", DeliveryContainerView.as_view(), name="add_delivery_cont"),
+    path("add-container-line/", ContainerLineView.as_view(), name="add_cont_line"),
     path("add-image/", DeliveryImageAddView.as_view(), name="add_image"),
     path("storage/", DeliveryStorageView.as_view(), name="delivery_storage"),
     path("<int:pk>/detail/", DeleveryDetailView.as_view(), name="delivery_detail"),

@@ -10,8 +10,8 @@ from django.views import View
 from delivery_stock.utils import relocate_or_get_error, save_images_for_object
 from recive_stock.settings import GS_BUCKET_NAME
 from .models import (
-    Delivery, ImageModel, 
-    Location, ReasoneComment, 
+    ContainerLine, Delivery, DeliveryContainer, ImageModel, 
+    Location, ReasoneComment, SecondRecDelivery, 
     Supplier, SuplierSKU,
     FirstRecDelivery
     )
@@ -101,11 +101,7 @@ class DeliverySecondRecCreateView(LoginRequiredMixin, View):
             {"id": sup.id, "name": f"{sup.name} - {sup.supplier_wms_id}"}
             for sup in supliers_list
         ]
-        context["recive_units"] = [ unit[0] for unit in Delivery.RECIVE_UNIT]
-        reasones_list = ReasoneComment.objects.filter(reception="second")
-        reasones = [{"id": reas.id, "name": reas.name} for reas in reasones_list]
         context["suppliers"] = suppliers
-        context["reasones"] = reasones
         return context
 
     def get(self, request, *args, **kwargs):
@@ -115,43 +111,124 @@ class DeliverySecondRecCreateView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         supplier_id = request.POST.get("selected_supplier_id", None)
         pre_advice = request.POST.get("pre_advice", None)
-        tape_of_unit = request.POST.get("tape_of_unit", None)
         master_nr = request.POST.get("master_nr")
-        qty = request.POST.get("qty_unit", None)
-        ean = request.POST.get("ean", None)
-        reason = request.POST.get("reasones")
-        extra_comment = request.POST.get("extra_comment", "")
         date_recive = datetime.now()
         recive_lock, _ = Location.objects.get_or_create(name="2R-STOCK", work_zone=1)
 
-        if reason in ["brak kodu ean",] or not ean:
-            supplier_sku = None
-        else:
-            supplier_sku = SuplierSKU.objects.filter(barcode__icontains=ean).first()
-        
         with transaction.atomic():
-            delivery = Delivery.objects.create(
+            delivery = SecondRecDelivery.objects.create(
                 supplier_company=get_object_or_404(Supplier, id=supplier_id),
-                pre_advice_nr=pre_advice,
-                reasone_comment=reason,
+                pre_advice_nr=pre_advice, 
                 user=self.request.user,
-                recive_location=recive_lock,
-                location=recive_lock,
                 date_recive=date_recive,
-                recive_unit=tape_of_unit,
                 master_nr=master_nr,
-                qty_unit=qty
             )
-            if not supplier_sku and ean:
-                delivery.not_sys_barcode = ean
-            if supplier_sku:
-                delivery.suplier_sku.add(supplier_sku)
+            delivery_cont = DeliveryContainer(
+                location= recive_lock,
+                delivery = delivery,
+                recive_location = recive_lock
+            )
             delivery.save()
-        return render(
-            request, "delivery_stock/delivery_image_add.html", {"delivery_id": delivery.id}
+            delivery_cont.save()
+            context = {}
+            context["delivery_id"] = delivery.id
+            context["delivery_cont_id"] = delivery_cont.id
+        return redirect(
+            reverse("delivery_stock:add_cont_line") + f"?delivery_id={delivery.id}&delivery_cont_id={delivery_cont.id}"
         )
     
+
+class DeliveryContainerView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/add_delivery_container.html"
+
+    def get(self, request, *args, **kwargs):
+        delivery_id = request.GET.get("delivery_id")
+        delivery_cont_id = request.GET.get("delivery_cont_id")        
+        context = {}
+        context["delivery_id"] = delivery_id  
+        context["delivery_cont_id"] = delivery_cont_id 
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        button_id = request.POST.get("button_id")
+        delivery_id = request.POST.get("delivery_id")
+        delivery_cont_id = request.POST.get("delivery_cont_id")
+       
+        if button_id == "add_line_btn":
+            return redirect(
+            reverse("delivery_stock:add_cont_line") + f"?delivery_id={delivery_id}&delivery_cont_id={delivery_cont_id}"
+        )
+        elif button_id == "add_container_btn":
+            delivery = SecondRecDelivery.objects.get(id=delivery_id)
+            rec_loc = Location.objects.get(name="2R-STOCK", work_zone=1)
+            delivery_cont = DeliveryContainer(
+                location=rec_loc ,
+                delivery = delivery,
+                recive_location=rec_loc
+            )
+            delivery_cont.save()
+            return redirect(
+            reverse("delivery_stock:add_cont_line") + f"?delivery_id={delivery.id}&delivery_cont_id={delivery_cont.id}"
+            )
+        elif button_id == "finish_btn":
+            return render(request, "delivery_stock/select_reception.html")
+
+
     
+class ContainerLineView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/add_container_line.html"
+    
+    def get_context_data(self, **kwargs):
+        context = {}
+        
+        context["recive_units"] = [ unit[0] for unit in FirstRecDelivery.RECIVE_UNIT]
+        reasones_list = ReasoneComment.objects.filter(reception="second")
+        reasones = [{"id": reas.id, "name": reas.name} for reas in reasones_list]
+        
+        context["reasones"] = reasones
+        return context
+
+    def get(self, request, *args, **kwargs):
+        delivery_id = request.GET.get("delivery_id")
+        delivery_cont_id = request.GET.get("delivery_cont_id")
+
+        context = self.get_context_data()
+        context["delivery_id"] = delivery_id
+        context["delivery_cont_id"] = delivery_cont_id
+       
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        delivery_id = request.POST.get("delivery_id")
+        delivery_cont_id = request.POST.get("delivery_cont_id")
+
+        unit_type = request.POST.get("tape_of_unit")
+        qty = request.POST.get("qty_unit")
+        ean = request.POST.get("ean")
+        reason = request.POST.get("reasones")
+  
+        if unit_type == "pall.full.":
+            pass
+        container = DeliveryContainer.objects.get(id=delivery_cont_id)
+        supplier_sku = SuplierSKU.objects.filter(barcode__icontains=ean).first()
+
+        cont_line = ContainerLine(
+            reasone_comment=reason, 
+            qty_unit=qty,
+            suplier_sku = supplier_sku,
+            container=container,
+            recive_unit=unit_type
+        )
+        cont_line.save()
+        return redirect(
+            reverse("delivery_stock:add_delivery_cont") + f"?delivery_id={delivery_id}&delivery_cont_id={delivery_cont_id}"
+        )
+
+        
+
+
+
+
 class DeliveryImageAddView(LoginRequiredMixin, View):
     template_name = "delivery_stock/image_add.html"
 
@@ -210,9 +287,7 @@ class DeliveryStorageView(LoginRequiredMixin, View):
         location = request.POST.get("location")
         recive_loc = request.POST.get("recive_loc")
 
-        queryset = Delivery.objects.all().select_related(
-            "supplier_company", "recive_location", "location"
-        )
+        queryset = Delivery.objects.all().select_related("supplier_company")
 
         if status and status != "None":
             queryset = queryset.filter(location__work_zone=status)

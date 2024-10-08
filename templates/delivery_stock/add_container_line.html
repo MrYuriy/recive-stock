@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load static %}
+<div class="btn-group flex-container">
+{% block navigation %}
+    <nav class="navigation">
+        {% comment %} <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:select_receprion' %}" title="Wróć">
+            <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+        </a>
+         {% endcomment %}
+    </nav>
+{% endblock %}
+
+{% block content %}
+<form method="post" action="{% url 'delivery_stock:add_cont_line' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <input type="hidden" name="delivery_id" id="delivery_id" value={{ delivery_id }} required>
+    <input type="hidden" name="delivery_cont_id" id="delivery_cont_id" value={{ delivery_cont_id }} required>
+
+    
+    <div class="input-group mb-3" type="number">
+        <select id="tape_of_unit" name="tape_of_unit" class="form-select" required>
+            <option  disabled selected value="" >Jednostka</option>
+            {% for unit in recive_units %}
+                <option value="{{ unit }}">{{ unit }}</option>
+            {% endfor %}
+        </select> 
+    </div>
+
+    <div class="input-group mb-3" type="number", >
+        <select name="reasones" class="form-select" required>
+            <option  disabled selected value="" >Wybierz powód</option>
+            {% for reasone in reasones %}
+                <option value="{{ reasone.id }}">{{ reasone.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">EAN: </span>
+        <input type="number" style="width: 65%;" name="ean">
+    </div>
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;" >QTY: </span>
+        <input type="number" style="width: 65%;" name="qty_unit" required>
+    </div>
+    
+    <div class="input-group mb-3" type="number", >
+        <select name="reasones" class="form-select" required>
+            <option  disabled selected value="" >Wybierz powód</option>
+            {% for reasone in reasones %}
+                <option value="{{ reasone.id }}">{{ reasone.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="input-group mb-3" type="number", >
+        <input name="extra_comment" type="text" class="form-control" placeholder="Co dalej stało się z produktem?">
+    </div>
+
+        <input class="btn btn-secondary" type="submit" value="Submit" style="width: 100%;"> 
+</form>
+
+{% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+{% endif %}
+    
+{% endblock %}
