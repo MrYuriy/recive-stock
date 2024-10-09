@@ -188,7 +188,7 @@ class ContainerLineView(LoginRequiredMixin, View):
     def get_context_data(self, **kwargs):
         context = {}
         
-        context["recive_units"] = [ unit[0] for unit in FirstRecDelivery.RECIVE_UNIT]
+        context["recive_units"] = [ unit[0] for unit in ContainerLine.RECIVE_UNIT]
         reasones_list = ReasoneComment.objects.filter(reception="second")
         reasones = [{"id": reas.id, "name": reas.name} for reas in reasones_list]
         
@@ -227,13 +227,13 @@ class ContainerLineView(LoginRequiredMixin, View):
             recive_unit=unit_type
         )
         cont_line.save()
+        if request.FILES:
+            save_images_for_object(request, cont_line, delivery_cont_id)
         return redirect(
             reverse("delivery_stock:add_delivery_cont") + f"?delivery_id={delivery_id}&delivery_cont_id={delivery_cont_id}"
         )
 
         
-
-
 
 
 class DeliveryImageAddView(LoginRequiredMixin, View):
