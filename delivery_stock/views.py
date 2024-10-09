@@ -35,6 +35,13 @@ class SelectReceptionView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
+
+
+class SelectStoreReceptionView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/select_store_reception.html"
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
     
 
 class DeliveryFirsrRecCreateView(LoginRequiredMixin, View):
@@ -267,6 +274,115 @@ class DeliveryImageAddView(LoginRequiredMixin, View):
         return render(request, "delivery_stock/select_reception.html")
 
 
+class DeliveryStorFirstRecView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/storeg_f_rec_filter_page.html"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        context = {}
+        identifier = request.POST.get("identifier")
+        status = request.POST.get("status")
+        date_recive = request.POST.get("date_recive")
+        location = request.POST.get("location")
+
+        queryset = FirstRecDelivery.objects.all().select_related(
+            "supplier_company", "location", "recive_location", "user"
+            )
+
+        if status and status != "None":
+            queryset = queryset.filter(location__work_zone=status)
+        if identifier and identifier != 'None':
+            queryset = queryset.filter(identifier__icontains=identifier)
+        if date_recive and date_recive and date_recive != 'None':
+            date_recive_dt = datetime.strptime(date_recive, "%Y-%m-%d")
+            queryset = queryset.filter(date_recive__date=date_recive_dt)
+        if location and location != 'None':
+            queryset = queryset.filter(location__name__icontains=location)
+        
+        page = request.POST.get('page', 1)
+        paginator = Paginator(queryset.order_by("-date_recive"), 300)
+        try:
+            deliveries = paginator.page(page)
+        except PageNotAnInteger:
+            deliveries = paginator.page(1)
+        except EmptyPage:
+            deliveries = paginator.page(paginator.num_pages)
+
+        context["delivery_list"] = deliveries
+        context["filters"] = {
+            "identifier": identifier,
+            "date_recive": date_recive,
+            "status": status,
+            "location": location,
+        }
+
+        return render(request, "delivery_stock/delivery_f_rec_list.html", context)
+    
+
+class DeliveryStorSecondRecView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/storeg_s_rec_filter_page.html"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        context = {}
+        identifier = request.POST.get("identifier")
+        status = request.POST.get("status")
+        date_recive = request.POST.get("date_recive")
+        location = request.POST.get("location")
+
+        queryset = ContainerLine.objects.select_related(
+            "container",               
+            "container__delivery",      
+            "container__delivery__supplier_company", 
+            "suplier_sku"          
+        )
+
+        if status and status != "None":
+            queryset = queryset.filter(location__work_zone=status)
+        if identifier and identifier != 'None':
+            queryset = queryset.filter(identifier__icontains=identifier)
+        if date_recive and date_recive != 'None':
+            date_recive_dt = datetime.strptime(date_recive, "%Y-%m-%d")
+            queryset = queryset.filter(container__delivery__date_recive__date=date_recive_dt)
+        if location and location != 'None':
+            queryset = queryset.filter(location__name__icontains=location)
+        
+        page = request.POST.get('page', 1)
+        paginator = Paginator(queryset.order_by("-container__delivery__date_recive"), 300)
+        try:
+            delivery_lines = paginator.page(page)
+        except PageNotAnInteger:
+            delivery_lines = paginator.page(1)
+        except EmptyPage:
+            delivery_lines = paginator.page(paginator.num_pages)
+
+        context["line_list"] = delivery_lines
+        context["filters"] = {
+            "identifier": identifier,
+            "date_recive": date_recive,
+            "status": status,
+            "location": location,
+        }
+
+        return render(request, "delivery_stock/delivery_s_rec_list.html", context)
+    
+
+
+
 class DeliveryStorageView(LoginRequiredMixin, View):
     template_name = "delivery_stock/storeg_filter_page.html"
 
@@ -324,7 +440,7 @@ class DeliveryStorageView(LoginRequiredMixin, View):
 
         return render(request, "delivery_stock/delivery_list.html", context)
 
-class DeleveryDetailView(LoginRequiredMixin, View):
+class DeleveryFirsRecDetailView(LoginRequiredMixin, View):
     def get_context_data(self, delivery_id):
         context = {}
         delivery = get_object_or_404(FirstRecDelivery, id=delivery_id)
@@ -345,7 +461,7 @@ class DeleveryDetailView(LoginRequiredMixin, View):
         delivery_id = self.kwargs.get("pk")
         context = self.get_context_data(delivery_id=delivery_id)
 
-        return render(request, "delivery_stock/delivery_detail.html", context)
+        return render(request, "delivery_stock/delivery_f_rec_detail.html", context)
 
 
 class SupplierListView(LoginRequiredMixin, View):

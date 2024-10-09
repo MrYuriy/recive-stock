@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block content %}
-    <form method="post" action="{% url 'delivery_stock:delivery_storage' %}" enctype="multipart/form-data">
+    <form method="post" action="{% url 'delivery_stock:store_second_rec' %}" enctype="multipart/form-data">
         {% csrf_token %}
 
         <div class="input-group mb-3">
@@ -30,10 +30,6 @@
         </div>
 
         <div class="input-group mb-3" type="number">
-            <input type="number" name="pre_advice" style="width: 100%;" placeholder="PreAdvice">
-        </div>
-
-        <div class="input-group mb-3" type="number">
             <span class="input-group-text" id="inputGroup-sizing-default">Data: </span>
             <input type="date" name="date_recive" class="form-control" aria-describedby="inputGroup-sizing-default">
         </div>
@@ -43,11 +39,7 @@
         </div>
 
         <div class="input-group mb-3">
-        <select name="recive_loc" class="form-select">
-            <option  disabled selected value="" > Wybierz Recepcja</option>
-            <option value="1R">Rec 1</option>
-            <option value="2R">Rec 2</option>
-        </select>
+
         </div>
         
         <input class="btn btn-secondary" type="submit" value="Submit" style="width: 100%;"> 

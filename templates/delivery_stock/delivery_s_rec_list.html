@@ -1,0 +1,110 @@
+{% extends 'pc_base.html' %}
+{% load crispy_forms_filters %}
+{% load static %}
+
+{% block navigation %}
+    <nav class="navigation">
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:delivery_storage' %}" title="Wróć">
+            <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+        </a> </nav>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="width: 90%;">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <form method="post" id="filter-form">
+                {% csrf_token %}
+                <input type="hidden" name="identifier" value="{{ filters.identifier }}">
+                <input type="hidden" name="date_recive" value="{{ filters.date_recive }}">
+                <input type="hidden" name="status" value="{{ filters.status }}">
+                <input type="hidden" name="location" value="{{ filters.location }}">
+                <input type="hidden" name="page" id="page-input" value="1">
+            </form>
+
+            <table class="table table-sm">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Id</th>
+                        <th>Delivery</th>
+                        <th>Kontainer</th>
+                        <th>Dostawca</th>
+                        <th>Data Przyjęcia</th>
+                        <th>Powód</th>
+                        <th>Obecna lokalizacja</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in line_list %}
+                    <tr>
+                        <td><a style="text-decoration:none" class="link-dark" href="">{{ line.id }}</a></td>
+                        <td>{{ line.container.delivery.identifier }}</td>
+                        <td>{{ line.container.identifier }}</td>
+                        <td>{{ line.container.delivery.supplier_company.name }}</td>
+                        <td>{{ line.container.delivery.date_recive|date:"d-m-Y H:i" }}</td>
+                        <td>{{ line.reasone_comment }}</td>
+                        <td>{{ line.container.location.name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if line_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="javascript:void(0);" onclick="submitPage(1)">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="javascript:void(0);" onclick="submitPage({{ line_list.previous_page_number }})">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    {% for i in line_list.paginator.page_range %}
+                    {% if line_list.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="javascript:void(0);" onclick="submitPage({{ i }})">{{ i }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if line_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="javascript:void(0);" onclick="submitPage({{ line_list.next_page_number }})">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="javascript:void(0);" onclick="submitPage({{ line_list.paginator.num_pages }})">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+function submitPage(page) {
+    document.getElementById('page-input').value = page;
+    document.getElementById('filter-form').submit();
+}
+</script>
+<style>
+    .pagination .page-item .page-link {
+        color: black; /* Колір тексту */
+        background-color: #f8f9fa; /* Колір фону */
+        border: 1px solid black; /* Колір рамки */
+    }
+    .pagination .page-item.active .page-link {
+        background-color: black; /* Колір фону для активної сторінки */
+        border-color: black; /* Колір рамки для активної сторінки */
+        color: white; /* Колір тексту для активної сторінки */
+    }
+    .pagination .page-item .page-link:hover {
+        background-color: #343a40; /* Колір фону при наведенні */
+        color: white; /* Колір тексту при наведенні */
+    }
+</style>
+{% endblock %}
