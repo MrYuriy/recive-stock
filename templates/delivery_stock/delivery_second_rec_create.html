@@ -19,7 +19,7 @@
     {% csrf_token %}
 
     <div class="input-group mb-3" type="number">
-        <span class="input-group-text" style="width: 35%;">Dostawca: </span>
+        <span class="input-group-text" style="width: 35%;">Dostawca*: </span>
         <input type="text" style="width: 65%;" name="supplier_company" id="supplier_company_search" autocomplete="off" oninput="searchSupplier()">
         <div id="supplier_suggestions" onclick="selectSupplier(event)">
         </div>

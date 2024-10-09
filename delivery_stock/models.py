@@ -174,6 +174,7 @@ class ContainerLine(models.Model):
         SuplierSKU, on_delete=models.CASCADE, blank=True, null=True
     )
     container = models.ForeignKey(DeliveryContainer, on_delete=models.CASCADE)
+    images_url = models.ManyToManyField(ImageModel, blank=True)
 
     def __str__(self) -> str:
         return f"{self.suplier_sku.sku} {self.container.identifier}"

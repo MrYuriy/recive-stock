@@ -24,7 +24,7 @@
     
     <div class="input-group mb-3" type="number">
         <select id="tape_of_unit" name="tape_of_unit" class="form-select" required>
-            <option  disabled selected value="" >Jednostka</option>
+            <option  disabled selected value="" >Jednostka*</option>
             {% for unit in recive_units %}
                 <option value="{{ unit }}">{{ unit }}</option>
             {% endfor %}
@@ -32,35 +32,32 @@
     </div>
 
     <div class="input-group mb-3" type="number", >
-        <select name="reasones" class="form-select" required>
-            <option  disabled selected value="" >Wybierz powód</option>
-            {% for reasone in reasones %}
-                <option value="{{ reasone.id }}">{{ reasone.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div class="input-group mb-3" type="number">
-        <span class="input-group-text" style="width: 35%;">EAN: </span>
-        <input type="number" style="width: 65%;" name="ean">
-    </div>
-
-    <div class="input-group mb-3" type="number">
-        <span class="input-group-text" style="width: 35%;" >QTY: </span>
-        <input type="number" style="width: 65%;" name="qty_unit" required>
-    </div>
-    
-    <div class="input-group mb-3" type="number", >
-        <select name="reasones" class="form-select" required>
-            <option  disabled selected value="" >Wybierz powód</option>
+        <select id="reasones" name="reasones" class="form-select" onchange="toggleEANField()" required>
+            <option  disabled selected value="" >Wybierz powód*</option>
             {% for reasone in reasones %}
                 <option value="{{ reasone.name }}">{{ reasone.name }}</option>
             {% endfor %}
         </select>
     </div>
-    <div class="input-group mb-3" type="number", >
-        <input name="extra_comment" type="text" class="form-control" placeholder="Co dalej stało się z produktem?">
+
+    <div class="input-group mb-3" type="number" id="ean-field">
+        <span class="input-group-text" style="width: 35%;">EAN: </span>
+        <input type="number" style="width: 65%;" name="ean">
     </div>
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;" >QTY*: </span>
+        <input type="number" style="width: 65%;" name="qty_unit" required>
+    </div>
+    
+
+    <div class="mb-3" id="imag-fields">
+        <input name="images_url_1" class="form-control" type="file" id="formFileMultiple">
+        <button type="button" onclick="addImageField()" style="width: 100%;">+</button>
+    </div>
+    {% comment %} <div class="input-group mb-3" type="number", >
+        <input name="extra_comment" type="text" class="form-control" placeholder="Co dalej stało się z produktem?">
+    </div> {% endcomment %}
 
         <input class="btn btn-secondary" type="submit" value="Submit" style="width: 100%;"> 
 </form>
@@ -70,5 +67,44 @@
         {{ error_message }}
     </div>
 {% endif %}
+
+<script>
+    function toggleEANField() {
+        const reasonesSelect = document.getElementById('reasones');
+        const eanField = document.getElementById('ean-field');
+        
+        if (reasonesSelect.value === 'brak kodu ean') {
+            eanField.style.display = 'none';
+        } else {
+            eanField.style.display = 'flex';
+        }
+    }
+
+
+    function addImageField(){
+        const imageFieldContainer = document.getElementById('imag-fields');
+        const fieldCount = imageFieldContainer.childElementCount;
+        
+        const newImageField = document.createElement('div');
+        newImageField.className = 'mb-3';
+
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.className = "form-control";
+        fileInput.name = `images_url_${fieldCount}`;
+        fileInput.style.width = '100%';
+        fileInput.style.marginTop = "15px";
+
+        // Insert the new container before the button
+        imageFieldContainer.insertBefore(newImageField, imageFieldContainer.lastElementChild);
+
+        // Append new inputs to the container
+        newImageField.appendChild(fileInput);
+
+    }
+
+
+
+</script>    
     
 {% endblock %}

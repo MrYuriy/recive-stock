@@ -3,7 +3,7 @@
 {% load static %}
 <div class="btn-group flex-container">
 {% block navigation %}
-    <nav class="navigation">
+    {% comment %} <nav class="navigation">
         <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
             <img src="{% static '/img/house.svg' %}" alt="Do główną">
         </a>
@@ -11,7 +11,7 @@
             <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
         </a>
         
-    </nav>
+    </nav> {% endcomment %}
 {% endblock %}
 
 {% block content %}

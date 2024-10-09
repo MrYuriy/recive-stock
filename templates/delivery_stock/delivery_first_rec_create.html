@@ -19,7 +19,7 @@
     {% csrf_token %}
 
     <div class="input-group mb-3" type="number">
-        <span class="input-group-text" style="width: 35%;">Dostawca: </span>
+        <span class="input-group-text" style="width: 35%;">Dostawca*: </span>
         <input type="text" style="width: 65%;" name="supplier_company" id="supplier_company_search" autocomplete="off" oninput="searchSupplier()">
         <div id="supplier_suggestions" onclick="selectSupplier(event)">
         </div>
@@ -36,24 +36,24 @@
     </div>
 
     <div class="input-group mb-3" type="number">
-        <span class="input-group-text" style="width: 35%;" >QTY: </span>
+        <span class="input-group-text" style="width: 35%;" >QTY*: </span>
         <input type="number" style="width: 65%;" name="qty_unit" required>
     </div>
 
     <div class="input-group mb-3" type="number">
-        <span class="input-group-text" style="width: 35%;" >TIR: </span>
+        <span class="input-group-text" style="width: 35%;" >TIR*: </span>
         <input type="text" style="width: 65%;" name="tir_nr" required>
     </div>
 
     <div class="input-group mb-3" type="number">
         <span class="input-group-text" style="width: 35%;" >Kontener: </span>
-        <input type="text" style="width: 65%;" name="container_nr" required>
+        <input type="text" style="width: 65%;" name="container_nr" >
     </div>
 
     
     <div class="input-group mb-3" type="number", >
         <select name="reasones" class="form-select" required>
-            <option  disabled selected value="" >Wybierz powód</option>
+            <option  disabled selected value="" >Wybierz powód*</option>
             {% for reasone in reasones %}
                 <option value="{{ reasone.name }}">{{ reasone.name }}</option>
             {% endfor %}
