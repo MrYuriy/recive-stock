@@ -28,7 +28,7 @@
             <table class="table table-sm">
                 <thead class="thead-dark">
                     <tr>
-                        <th>Id</th>
+                        <th>Numer linii</th>
                         <th>Delivery</th>
                         <th>Kontainer</th>
                         <th>Dostawca</th>
@@ -40,9 +40,9 @@
                 <tbody>
                     {% for line in line_list %}
                     <tr>
-                        <td><a style="text-decoration:none" class="link-dark" href="">{{ line.id }}</a></td>
+                        <td>{{ line.line_nr }}</td>
                         <td>{{ line.container.delivery.identifier }}</td>
-                        <td>{{ line.container.identifier }}</td>
+                        <td><a style="text-decoration:none" class="link-dark" href="{% url 'delivery_stock:container_detail' pk=line.container.id %}">{{ line.container.identifier }}</a></td>
                         <td>{{ line.container.delivery.supplier_company.name }}</td>
                         <td>{{ line.container.delivery.date_recive|date:"d-m-Y H:i" }}</td>
                         <td>{{ line.reasone_comment }}</td>

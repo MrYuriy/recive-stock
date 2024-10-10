@@ -465,6 +465,61 @@ class DeleveryFirsRecDetailView(LoginRequiredMixin, View):
         return render(request, "delivery_stock/delivery_f_rec_detail.html", context)
 
 
+class ContainerDetailView(LoginRequiredMixin, View):
+    def get_context(self, container_id):
+        container = (
+            DeliveryContainer.objects.select_related(
+                "recive_location", "location", "delivery", "delivery__supplier_company"
+            )
+            .prefetch_related(
+                Prefetch(
+                    "containerline_set",
+                    queryset=ContainerLine.objects.prefetch_related("images_url"),
+                )
+            )
+            .get(id=container_id)
+        )
+
+        container_data = {
+            "identifier": container.identifier,
+            "recive_location": container.recive_location.name,
+            "location": container.location.name,
+            "lovo_link": container.lovo_link,
+            "lovo_name": container.lovo_name,
+            "delivery_identifier": container.delivery.identifier,
+            "pre_advice_nr": container.delivery.pre_advice_nr,
+            "master_nr": container.delivery.master_nr,
+            "tir_nr": container.delivery.tir_nr,
+            "date_complite": container.date_complite,
+        }
+
+        lines_data = []
+        for line in container.containerline_set.all():
+            lines_data.append(
+                {
+                    "line_nr": line.line_nr,
+                    "reasone_comment": line.reasone_comment,
+                    "qty_unit": line.qty_unit,
+                    "recive_unit": line.recive_unit,
+                    "not_sys_barcode": line.not_sys_barcode,
+                    "suplier_sku": line.suplier_sku.sku if line.suplier_sku else None,
+                    "images_url": [
+                        f"https://storage.googleapis.com/{GS_BUCKET_NAME}/{image.image_data}"
+                        for image in line.images_url.all()
+                    ],
+                }
+            )
+
+        container_data["container_lines"] = lines_data
+        return container_data
+
+    def get(self, request, *args, **kwargs):
+        container_id = self.kwargs.get("pk")
+        context = self.get_context(container_id)
+
+        return render(request, "delivery_stock/container_detail.html", context) 
+
+
 class SupplierListView(LoginRequiredMixin, View):
     template_name = "delivery_stock/supplier_list.html"
 

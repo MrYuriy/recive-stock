@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load static %}
+<div class="btn-group flex-container">
+{% block navigation %}
+    <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+        <img src="{% static '/img/house.svg' %}" alt="Do główną">
+    </a>
+    <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:store_second_rec' %}" title="Wróć">
+        <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+    </a>   
+    
+    {% comment %} {% if not delivery.complite_status %}
+        <button id="lovoShowButton" name="lovo_show" type="button" class="btn btn-outline-secondary" title="Lovo link">
+            <img src="{% static '/img/link.svg' %}" alt="Lovo link"> 
+        </button>
+    {% endif %} {% endcomment %}
+    
+
+{% endblock %}
+</div>
+{% block content %}
+
+<div>
+    {% csrf_token %}
+
+    <!-- Lovo Link if exists -->
+    {% if lovo_link %}
+    <p class="alert alert-dark">Sprawa Lovo: 
+        <a target="_blank" 
+           class="link-secondary" 
+           href="{{ lovo_link }}">
+           {{ lovo_name }}
+        </a>
+    </p>
+    {% endif %}
+
+    <!-- Container details -->
+     
+    <p class="alert alert-dark">Identyfikator kontenera: {{ identifier }}</p>
+    <p class="alert alert-dark">Identyfikator dostawy: {{ delivery_identifier }}</p>
+    <p class="alert alert-dark">Numer zamówienia: {{ pre_advice_nr }}</p>
+    <p class="alert alert-dark">Master nr: {{ master_nr }}</p>
+    <p class="alert alert-dark">Lokalizacja przyjęciowa: {{ recive_location }}</p>
+    <p class="alert alert-dark">Obecna lokalizacja: {{ location }}</p>
+    {% if tir %}
+        <p class="alert alert-dark">TIR nr: {{ tir_nr }}</p>
+    {% endif %}
+    <p class="alert alert-dark">Data zakończenia: {{ date_complite }}</p>
+
+    <!-- Loop through container lines -->
+    {% for line in container_lines %}
+        <div class="alert alert-secondary">
+            <p><strong>Numer linii:</strong> {{ line.line_nr }}</p>
+            <p><strong>Powód:</strong> {{ line.reasone_comment }}</p>
+            <p><strong>Ilość :</strong> {{ line.qty_unit }}</p>
+            <p><strong>Jednostka:</strong> {{ line.recive_unit }}</p>
+            {% if line.not_sys_barcode %}
+                <p><strong>Kod kreskowy (nie systemowy):</strong> {{ line.not_sys_barcode }}</p>
+            {% endif %}
+            <p><strong>SKU:</strong> {{ line.suplier_sku }}</p>
+
+            <!-- Display images if available -->
+            {% if line.images_url %}
+                <p><strong>Zdjęcia:</strong></p>
+                {% for image_url in line.images_url %}
+                    <img src="{{ image_url }}" alt="Nie mam obrazów" style="width: 100%;">
+                    <br>
+                    <br>
+                {% endfor %}
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
