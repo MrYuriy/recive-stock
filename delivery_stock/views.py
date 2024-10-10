@@ -10,14 +10,21 @@ from django.views import View
 from delivery_stock.utils import relocate_or_get_error, save_images_for_object
 from recive_stock.settings import GS_BUCKET_NAME
 from .models import (
-    ContainerLine, Delivery, DeliveryContainer, ImageModel, 
-    Location, ReasoneComment, SecondRecDelivery, 
-    Supplier, SuplierSKU,
-    FirstRecDelivery
-    )
+    ContainerLine,
+    Delivery,
+    DeliveryContainer,
+    ImageModel,
+    Location,
+    ReasoneComment,
+    SecondRecDelivery,
+    Supplier,
+    SuplierSKU,
+    FirstRecDelivery,
+)
 
 from django.db import IntegrityError, transaction
 from django.db.models import Q
+from django.db.models import Prefetch
 
 
 class HomeView(LoginRequiredMixin, View):
@@ -25,7 +32,8 @@ class HomeView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
-    
+
+
 def admin_panel(request):
     return render(request, "delivery_stock/admin_panel.html")
 
@@ -42,7 +50,7 @@ class SelectStoreReceptionView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
-    
+
 
 class DeliveryFirsrRecCreateView(LoginRequiredMixin, View):
     template_name = "delivery_stock/delivery_first_rec_create.html"
@@ -54,7 +62,7 @@ class DeliveryFirsrRecCreateView(LoginRequiredMixin, View):
             {"id": sup.id, "name": f"{sup.name} - {sup.supplier_wms_id}"}
             for sup in supliers_list
         ]
-        context["recive_units"] = [ unit[0] for unit in FirstRecDelivery.RECIVE_UNIT]
+        context["recive_units"] = [unit[0] for unit in FirstRecDelivery.RECIVE_UNIT]
         reasones_list = ReasoneComment.objects.filter(reception="first")
         reasones = [{"id": reas.id, "name": reas.name} for reas in reasones_list]
         context["suppliers"] = suppliers
@@ -86,18 +94,19 @@ class DeliveryFirsrRecCreateView(LoginRequiredMixin, View):
                 recive_unit=tape_of_unit,
                 qty_unit=qty,
                 tir_nr=tir_nr,
-                container_nr=container_nr
+                container_nr=container_nr,
             )
             delivery.save()
         return render(
             request,
-            "delivery_stock/delivery_image_add.html", 
+            "delivery_stock/delivery_image_add.html",
             {
                 "obj_id": delivery.id,
                 "obj_model": "FirstRecDelivery",
-            }
+            },
         )
-    
+
+
 class DeliverySecondRecCreateView(LoginRequiredMixin, View):
     template_name = "delivery_stock/delivery_second_rec_create.html"
 
@@ -125,15 +134,13 @@ class DeliverySecondRecCreateView(LoginRequiredMixin, View):
         with transaction.atomic():
             delivery = SecondRecDelivery.objects.create(
                 supplier_company=get_object_or_404(Supplier, id=supplier_id),
-                pre_advice_nr=pre_advice, 
+                pre_advice_nr=pre_advice,
                 user=self.request.user,
                 date_recive=date_recive,
                 master_nr=master_nr,
             )
             delivery_cont = DeliveryContainer(
-                location= recive_lock,
-                delivery = delivery,
-                recive_location = recive_lock
+                location=recive_lock, delivery=delivery, recive_location=recive_lock
             )
             delivery.save()
             delivery_cont.save()
@@ -141,57 +148,57 @@ class DeliverySecondRecCreateView(LoginRequiredMixin, View):
             context["delivery_id"] = delivery.id
             context["delivery_cont_id"] = delivery_cont.id
         return redirect(
-            reverse("delivery_stock:add_cont_line") + f"?delivery_id={delivery.id}&delivery_cont_id={delivery_cont.id}"
+            reverse("delivery_stock:add_cont_line")
+            + f"?delivery_id={delivery.id}&delivery_cont_id={delivery_cont.id}"
         )
-    
+
 
 class DeliveryContainerView(LoginRequiredMixin, View):
     template_name = "delivery_stock/add_delivery_container.html"
 
     def get(self, request, *args, **kwargs):
         delivery_id = request.GET.get("delivery_id")
-        delivery_cont_id = request.GET.get("delivery_cont_id")        
+        delivery_cont_id = request.GET.get("delivery_cont_id")
         context = {}
-        context["delivery_id"] = delivery_id  
-        context["delivery_cont_id"] = delivery_cont_id 
+        context["delivery_id"] = delivery_id
+        context["delivery_cont_id"] = delivery_cont_id
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
         button_id = request.POST.get("button_id")
         delivery_id = request.POST.get("delivery_id")
         delivery_cont_id = request.POST.get("delivery_cont_id")
-       
+
         if button_id == "add_line_btn":
             return redirect(
-            reverse("delivery_stock:add_cont_line") + f"?delivery_id={delivery_id}&delivery_cont_id={delivery_cont_id}"
-        )
+                reverse("delivery_stock:add_cont_line")
+                + f"?delivery_id={delivery_id}&delivery_cont_id={delivery_cont_id}"
+            )
         elif button_id == "add_container_btn":
             delivery = SecondRecDelivery.objects.get(id=delivery_id)
             rec_loc = Location.objects.get(name="2R-STOCK", work_zone=1)
             delivery_cont = DeliveryContainer(
-                location=rec_loc ,
-                delivery = delivery,
-                recive_location=rec_loc
+                location=rec_loc, delivery=delivery, recive_location=rec_loc
             )
             delivery_cont.save()
             return redirect(
-            reverse("delivery_stock:add_cont_line") + f"?delivery_id={delivery.id}&delivery_cont_id={delivery_cont.id}"
+                reverse("delivery_stock:add_cont_line")
+                + f"?delivery_id={delivery.id}&delivery_cont_id={delivery_cont.id}"
             )
         elif button_id == "finish_btn":
             return render(request, "delivery_stock/select_reception.html")
 
 
-    
 class ContainerLineView(LoginRequiredMixin, View):
     template_name = "delivery_stock/add_container_line.html"
-    
+
     def get_context_data(self, **kwargs):
         context = {}
-        
-        context["recive_units"] = [ unit[0] for unit in ContainerLine.RECIVE_UNIT]
+
+        context["recive_units"] = [unit[0] for unit in ContainerLine.RECIVE_UNIT]
         reasones_list = ReasoneComment.objects.filter(reception="second")
         reasones = [{"id": reas.id, "name": reas.name} for reas in reasones_list]
-        
+
         context["reasones"] = reasones
         return context
 
@@ -202,7 +209,7 @@ class ContainerLineView(LoginRequiredMixin, View):
         context = self.get_context_data()
         context["delivery_id"] = delivery_id
         context["delivery_cont_id"] = delivery_cont_id
-       
+
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
@@ -213,16 +220,16 @@ class ContainerLineView(LoginRequiredMixin, View):
         qty = request.POST.get("qty_unit")
         ean = request.POST.get("ean")
         reason = request.POST.get("reasones")
-  
+
         if unit_type == "pall.full.":
             pass
         container = DeliveryContainer.objects.get(id=delivery_cont_id)
         supplier_sku = SuplierSKU.objects.filter(barcode__icontains=ean).first()
-
+        line_position = container.containerline_set.count() + 1
         cont_line = ContainerLine(
-            reasone_comment=reason, 
+            reasone_comment=reason,
             qty_unit=qty,
-            suplier_sku = supplier_sku,
+            suplier_sku=supplier_sku,
             container=container,
             recive_unit=unit_type,
             line_nr = line_position
@@ -231,10 +238,9 @@ class ContainerLineView(LoginRequiredMixin, View):
         if request.FILES:
             save_images_for_object(request, cont_line, delivery_cont_id)
         return redirect(
-            reverse("delivery_stock:add_delivery_cont") + f"?delivery_id={delivery_id}&delivery_cont_id={delivery_cont_id}"
+            reverse("delivery_stock:add_delivery_cont")
+            + f"?delivery_id={delivery_id}&delivery_cont_id={delivery_cont_id}"
         )
-
-        
 
 
 class DeliveryImageAddView(LoginRequiredMixin, View):
@@ -262,7 +268,7 @@ class DeliveryImageAddView(LoginRequiredMixin, View):
         back_to_detail = self.request.POST.get("back_to_detail")
         # Отримати модель динамічно
         ModelClass = globals().get(obj_model)
-        
+
         if ModelClass is None:
             return HttpResponseBadRequest(f"Unknown model: {obj_model}")
         obj = ModelClass.objects.get(id=obj_id)
@@ -295,19 +301,19 @@ class DeliveryStorFirstRecView(LoginRequiredMixin, View):
 
         queryset = FirstRecDelivery.objects.all().select_related(
             "supplier_company", "location", "recive_location", "user"
-            )
+        )
 
         if status and status != "None":
             queryset = queryset.filter(location__work_zone=status)
-        if identifier and identifier != 'None':
+        if identifier and identifier != "None":
             queryset = queryset.filter(identifier__icontains=identifier)
-        if date_recive and date_recive and date_recive != 'None':
+        if date_recive and date_recive and date_recive != "None":
             date_recive_dt = datetime.strptime(date_recive, "%Y-%m-%d")
             queryset = queryset.filter(date_recive__date=date_recive_dt)
-        if location and location != 'None':
+        if location and location != "None":
             queryset = queryset.filter(location__name__icontains=location)
-        
-        page = request.POST.get('page', 1)
+
+        page = request.POST.get("page", 1)
         paginator = Paginator(queryset.order_by("-date_recive"), 300)
         try:
             deliveries = paginator.page(page)
@@ -325,7 +331,7 @@ class DeliveryStorFirstRecView(LoginRequiredMixin, View):
         }
 
         return render(request, "delivery_stock/delivery_f_rec_list.html", context)
-    
+
 
 class DeliveryStorSecondRecView(LoginRequiredMixin, View):
     template_name = "delivery_stock/storeg_s_rec_filter_page.html"
@@ -346,24 +352,28 @@ class DeliveryStorSecondRecView(LoginRequiredMixin, View):
         location = request.POST.get("location")
 
         queryset = ContainerLine.objects.select_related(
-            "container",               
-            "container__delivery",      
-            "container__delivery__supplier_company", 
-            "suplier_sku"          
+            "container",
+            "container__delivery",
+            "container__delivery__supplier_company",
+            "suplier_sku",
         )
 
         if status and status != "None":
             queryset = queryset.filter(location__work_zone=status)
-        if identifier and identifier != 'None':
+        if identifier and identifier != "None":
             queryset = queryset.filter(identifier__icontains=identifier)
-        if date_recive and date_recive != 'None':
+        if date_recive and date_recive != "None":
             date_recive_dt = datetime.strptime(date_recive, "%Y-%m-%d")
-            queryset = queryset.filter(container__delivery__date_recive__date=date_recive_dt)
-        if location and location != 'None':
+            queryset = queryset.filter(
+                container__delivery__date_recive__date=date_recive_dt
+            )
+        if location and location != "None":
             queryset = queryset.filter(location__name__icontains=location)
-        
-        page = request.POST.get('page', 1)
-        paginator = Paginator(queryset.order_by("-container__delivery__date_recive"), 300)
+
+        page = request.POST.get("page", 1)
+        paginator = Paginator(
+            queryset.order_by("-container__delivery__date_recive"), 300
+        )
         try:
             delivery_lines = paginator.page(page)
         except PageNotAnInteger:
@@ -380,8 +390,6 @@ class DeliveryStorSecondRecView(LoginRequiredMixin, View):
         }
 
         return render(request, "delivery_stock/delivery_s_rec_list.html", context)
-    
-
 
 
 class DeliveryStorageView(LoginRequiredMixin, View):
@@ -408,19 +416,19 @@ class DeliveryStorageView(LoginRequiredMixin, View):
 
         if status and status != "None":
             queryset = queryset.filter(location__work_zone=status)
-        if identifier and identifier != 'None':
+        if identifier and identifier != "None":
             queryset = queryset.filter(identifier__icontains=identifier)
-        if pre_advice and pre_advice != 'None':
+        if pre_advice and pre_advice != "None":
             queryset = queryset.filter(nr_order=pre_advice)
-        if date_recive and date_recive and date_recive != 'None':
+        if date_recive and date_recive and date_recive != "None":
             date_recive_dt = datetime.strptime(date_recive, "%Y-%m-%d")
             queryset = queryset.filter(date_recive__date=date_recive_dt)
-        if location and location != 'None':
+        if location and location != "None":
             queryset = queryset.filter(location__name__icontains=location)
-        if recive_loc and recive_loc != 'None':
+        if recive_loc and recive_loc != "None":
             queryset = queryset.filter(recive_location__name=recive_loc)
 
-        page = request.POST.get('page', 1)
+        page = request.POST.get("page", 1)
         paginator = Paginator(queryset.order_by("-date_recive"), 300)
         try:
             deliveries = paginator.page(page)
@@ -441,6 +449,7 @@ class DeliveryStorageView(LoginRequiredMixin, View):
 
         return render(request, "delivery_stock/delivery_list.html", context)
 
+
 class DeleveryFirsRecDetailView(LoginRequiredMixin, View):
     def get_context_data(self, delivery_id):
         context = {}
@@ -458,6 +467,7 @@ class DeleveryFirsRecDetailView(LoginRequiredMixin, View):
         context["delivery"] = delivery
 
         return context
+
     def get(self, request, *args, **kwargs):
         delivery_id = self.kwargs.get("pk")
         context = self.get_context_data(delivery_id=delivery_id)
@@ -605,12 +615,13 @@ class SupplierCreateView(LoginRequiredMixin, View):
 
 class LocationListView(LoginRequiredMixin, View):
     template_name = "delivery_stock/location_list.html"
+
     def get_context_data(self, **kwargs):
         context = {}
         locations = Location.objects.all()
         context["location_list"] = locations
         return context
-    
+
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
         return render(request, self.template_name, context=context)
@@ -623,13 +634,13 @@ class LocationUpdateView(LoginRequiredMixin, View):
         context = {}
         location = Location.objects.get(id=locatio_id)
         context["location"] = location
-        return context 
+        return context
 
     def get(self, request, *args, **kwargs):
         location_id = self.kwargs.get("pk")
         context = self.get_context_data(locatio_id=location_id)
-        return render(request, self.template_name, context=context) 
-    
+        return render(request, self.template_name, context=context)
+
     def post(self, request, *args, **kwargs):
         location_id = self.kwargs.get("pk")
         location_name = self.request.POST.get("location_name")
@@ -637,23 +648,27 @@ class LocationUpdateView(LoginRequiredMixin, View):
         delete_status = self.request.POST.get("delete")
         context = self.get_context_data(locatio_id=location_id)
         context["error_message"] = ""
-        
+
         location = Location.objects.get(id=location_id)
 
         if location.name in ["1R", "2R", "Shiped", "Utulizacja"]:
-            context["error_message"] = "Ta lokalizacja jest ważna, nie można jej usunąć ani zmienić"
+            context["error_message"] = (
+                "Ta lokalizacja jest ważna, nie można jej usunąć ani zmienić"
+            )
             return render(request, self.template_name, context)
 
         if delete_status:
-            if len(Delivery.objects.filter(location=location))>0:
-                context["error_message"] ="Ta lokalizacja nie jest pusta, wykonaj relokację"
+            if len(Delivery.objects.filter(location=location)) > 0:
+                context["error_message"] = (
+                    "Ta lokalizacja nie jest pusta, wykonaj relokację"
+                )
                 return render(request, self.template_name, context)
             location.delete()
             return redirect(reverse("delivery:location_list"))
 
         if location_name and location_name != location.name:
             location.name = location_name
-        
+
         if work_zone and work_zone != location.work_zone:
             location.work_zone = work_zone
         location.save()
@@ -666,29 +681,24 @@ class LocationCreateView(LoginRequiredMixin, View):
     def get_context_data(self):
         context = {}
         context["WORKZON_CHOICES"] = Location.WORKZON_CHOICES
-        return context 
+        return context
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
-        return render(request, self.template_name, context=context) 
+        return render(request, self.template_name, context=context)
 
     def post(self, request, *args, **kwargs):
         location_name = self.request.POST.get("location_name")
         work_zone = self.request.POST.get("work_zone")
         context = self.get_context_data()
         try:
-            Location.objects.create(
-                name=location_name,
-                work_zone=work_zone
-            )
+            Location.objects.create(name=location_name, work_zone=work_zone)
         except IntegrityError as e:
-                context["error_message"] = (
-                    "ta lokalizacja już istnieje"
-                )
-                return render(request, self.template_name, context=context) 
+            context["error_message"] = "ta lokalizacja już istnieje"
+            return render(request, self.template_name, context=context)
 
         return redirect(reverse("delivery:location_list"))
-    
+
 
 class SuplierSKUListView(LoginRequiredMixin, View):
     template_name = "delivery_stock/sku_list.html"
@@ -703,10 +713,12 @@ class SuplierSKUListView(LoginRequiredMixin, View):
 
         filter_value = request.GET.get("filter", None)
         if filter_value:
-            queryset = queryset.filter(Q(sku__contains=filter_value) | Q(barcode__icontains=filter_value))
+            queryset = queryset.filter(
+                Q(sku__contains=filter_value) | Q(barcode__icontains=filter_value)
+            )
 
         page = request.GET.get("page", 1)
-        paginator = Paginator(queryset.order_by("sku"), 2)        
+        paginator = Paginator(queryset.order_by("sku"), 2)
         try:
             sku_list = paginator.page(page)
         except PageNotAnInteger:
@@ -716,6 +728,7 @@ class SuplierSKUListView(LoginRequiredMixin, View):
         context = {}
         context["sku_list"] = sku_list
         return render(request, "delivery_stock/sku_list.html", context)
+
     def post(self, request, *args, **kwargs):
         return redirect(reverse("delivery_stock:sku_list"))
 
@@ -725,7 +738,7 @@ class SuplierSKUCreateView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
-    
+
     def post(self, request, *args, **kwargs):
         sku = int(self.request.POST.get("sku"))
         barcode = self.request.POST.get("barcode")
@@ -735,21 +748,17 @@ class SuplierSKUCreateView(LoginRequiredMixin, View):
             try:
                 suplier_sku = SuplierSKU(
                     sku=sku, barcode=barcode, deskription=deskription
-                    )
+                )
                 suplier_sku.save()
             except IntegrityError as e:
                 if "unique_barcode" in str(e):
-                    context["error_message"] = (
-                        "Sku with this barcode already exists"
-                    )
+                    context["error_message"] = "Sku with this barcode already exists"
                 else:
-                    context["error_message"] = (
-                        "An error occurred while saving the sku"
-                    )
+                    context["error_message"] = "An error occurred while saving the sku"
                 return render(request, self.template_name, context)
 
         return redirect(reverse("delivery_stock:sku_list"))
-    
+
 
 class SuplierSKUUpdateView(LoginRequiredMixin, View):
     template_name = "delivery_stock/sku_update.html"
@@ -759,12 +768,12 @@ class SuplierSKUUpdateView(LoginRequiredMixin, View):
         suplier_sku = SuplierSKU.objects.get(id=sku_id)
         context["suplier_sku"] = suplier_sku
         return context
-    
+
     def get(self, request, *args, **kwargs):
         sku_id = self.kwargs.get("pk")
         context = self.get_context_data(sku_id)
         return render(request, self.template_name, context=context)
-    
+
     def post(self, request, *args, **kwargs):
         suplier_sku_id = self.kwargs.get("pk")
         sku = int(self.request.POST.get("sku", "1"))
@@ -775,18 +784,20 @@ class SuplierSKUUpdateView(LoginRequiredMixin, View):
 
         suplier_sku = SuplierSKU.objects.get(id=suplier_sku_id)
         if delete_status:
-            if len(Delivery.objects.filter(suplier_sku=suplier_sku)) > 0 :
-                context["error_message"] = "To SKU jest używane w Delivery, najpierw usuń Delivery."
+            if len(Delivery.objects.filter(suplier_sku=suplier_sku)) > 0:
+                context["error_message"] = (
+                    "To SKU jest używane w Delivery, najpierw usuń Delivery."
+                )
                 return render(request, self.template_name, context)
             suplier_sku.delete()
             return redirect(reverse("delivery_stock:sku_list"))
-        
+
         if sku and sku != suplier_sku.sku:
             suplier_sku.sku = sku
 
         if barcode and barcode != suplier_sku.barcode:
             suplier_sku.barcode = barcode
-        
+
         if deskription and deskription != suplier_sku.deskription:
             suplier_sku.deskription = deskription
         suplier_sku.save()
@@ -803,10 +814,8 @@ class RelocationView(LoginRequiredMixin, View):
         identifier = request.POST.get("identifier")
         to_location = request.POST.get("to_location")
         context = relocate_or_get_error(
-            identifier=identifier, 
-            to_location=to_location, 
-            request=request
-            )
+            identifier=identifier, to_location=to_location, request=request
+        )
         if context["status"]:
             return render(
                 request,

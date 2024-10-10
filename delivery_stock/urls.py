@@ -1,6 +1,7 @@
 from django.urls import path
 
 from delivery_stock.views import (
+    ContainerDetailView,
     DeleveryFirsRecDetailView,
     DeliveryFirsrRecCreateView, 
     DeliveryImageAddView, 
@@ -38,6 +39,7 @@ urlpatterns = [
     path("storage-f-rec/", DeliveryStorFirstRecView.as_view(), name="store_first_rec"),
     path("storage-s-rec/", DeliveryStorSecondRecView.as_view(), name="store_second_rec"),
     path("<int:pk>/detail/", DeleveryFirsRecDetailView.as_view(), name="delivery_f_rec_detail"),
+    path("<int:pk>/container-detail/", ContainerDetailView.as_view(), name="container_detail"),
     path("admin-panel/", admin_panel, name="admin_panel"),
     path("supplier-list/", SupplierListView.as_view(), name="supplier_list"),
     path("supplier-create/", SupplierCreateView.as_view(), name="supplier_create"),
