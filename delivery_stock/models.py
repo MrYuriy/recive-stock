@@ -179,5 +179,5 @@ class ContainerLine(models.Model):
 
 
     def __str__(self) -> str:
-        return f"{self.suplier_sku.sku} {self.container.identifier}"
+        return f"{self.suplier_sku.sku if self.suplier_sku else self.not_sys_barcode} {self.container.identifier}"
 
