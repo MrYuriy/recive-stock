@@ -1,4 +1,8 @@
-from delivery_stock.models import Delivery, ImageModel, Location
+from delivery_stock.models import (
+    DeliveryContainer, 
+    ImageModel, Location,
+    FirstRecDelivery
+    )
 import io
 from reportlab.pdfgen import canvas
 
@@ -7,7 +11,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 
 
 def relocate_or_get_error(identifier, to_location, *args, **kwargs):
-    ereor_message = ""
+    error_message = ""
     status = True
     auto_in_val = {"identifier": identifier, "to_location": to_location}
    
@@ -18,29 +22,32 @@ def relocate_or_get_error(identifier, to_location, *args, **kwargs):
         del auto_in_val["to_location"]
         status = False
     try:
-        delivery = Delivery.objects.get(identifier=identifier)
-    except Delivery.DoesNotExist:
-        if error_message:
-            error_message += "i identyfikator."
-        else:
-            error_message = "Nieprawidłowy identyfikator."
-        del auto_in_val["identifier"]
-        status = False
+        delivery = DeliveryContainer.objects.get(identifier=identifier)
+    except DeliveryContainer.DoesNotExist:
+        try:
+            delivery = FirstRecDelivery.objects.get(identifier=identifier)
+        except FirstRecDelivery.DoesNotExist:
+            if error_message:
+                error_message += " i identyfikator."
+            else:
+                error_message = "Nieprawidłowy identyfikator."
+            del auto_in_val["identifier"]
+            status = False
 
     if status:
-        if delivery.complite_status:
-            del auto_in_val["to_location"]
-            del auto_in_val["identifier"]
-            error_message = "Zamówienie ma status complete"
-            return {"status": False, "error_message": error_message} | auto_in_val
+        # if delivery.complite_status:
+        #     del auto_in_val["to_location"]
+        #     del auto_in_val["identifier"]
+        #     error_message = "Zamówienie ma status complete"
+        #     return {"status": False, "error_message": error_message} | auto_in_val
             
         if to_location == delivery.location:
             del auto_in_val["to_location"]
             error_message = "Ta dostawa już jest w tej lokalizacji wybierz inną lokalizację"
             return {"status": False, "error_message": error_message} | auto_in_val
         
-        if to_location.work_zone == 4:
-            delivery.complite_status = True
+        # if to_location.work_zone == 4:
+        #     delivery.complite_status = True
 
         delivery.location = to_location
         delivery.save()
