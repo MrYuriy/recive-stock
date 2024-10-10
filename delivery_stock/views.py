@@ -224,7 +224,8 @@ class ContainerLineView(LoginRequiredMixin, View):
             qty_unit=qty,
             suplier_sku = supplier_sku,
             container=container,
-            recive_unit=unit_type
+            recive_unit=unit_type,
+            line_nr = line_position
         )
         cont_line.save()
         if request.FILES:
