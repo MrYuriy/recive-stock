@@ -221,22 +221,38 @@ class ContainerLineView(LoginRequiredMixin, View):
         ean = request.POST.get("ean")
         reason = request.POST.get("reasones")
 
-        if unit_type == "pall.full.":
-            pass
         container = DeliveryContainer.objects.get(id=delivery_cont_id)
-        supplier_sku = SuplierSKU.objects.filter(barcode__icontains=ean).first()
         line_position = container.containerline_set.count() + 1
+        # create new container if current line is full. pallet
+        if unit_type == "pall.full.":
+            delivery_cont_id = ""
+            if line_position >= 2:
+                recive_loc = Location.objects.get(name="2R-STOCK", work_zone=1)
+                container = DeliveryContainer(
+                    location = recive_loc,
+                    delivery = SecondRecDelivery.objects.get(id=delivery_id),
+                    recive_location = recive_loc
+                )
+                line_position = 1
+                container.save()
+            
+        supplier_sku = (
+            SuplierSKU.objects.filter(barcode__icontains=ean).first()
+            if ean != ""
+            else None
+        )
         cont_line = ContainerLine(
             reasone_comment=reason,
             qty_unit=qty,
             suplier_sku=supplier_sku,
             container=container,
             recive_unit=unit_type,
-            line_nr = line_position
+            line_nr=line_position,
+            not_sys_barcode=ean if supplier_sku is None else None,
         )
         cont_line.save()
         if request.FILES:
-            save_images_for_object(request, cont_line, delivery_cont_id)
+            save_images_for_object(request, cont_line, container.id)
         return redirect(
             reverse("delivery_stock:add_delivery_cont")
             + f"?delivery_id={delivery_id}&delivery_cont_id={delivery_cont_id}"
@@ -513,6 +529,8 @@ class ContainerDetailView(LoginRequiredMixin, View):
                     "recive_unit": line.recive_unit,
                     "not_sys_barcode": line.not_sys_barcode,
                     "suplier_sku": line.suplier_sku.sku if line.suplier_sku else None,
+                    "ean": line.suplier_sku.barcode if line.suplier_sku else None,
+                    "deskription": line.suplier_sku.deskription if line.suplier_sku else None,
                     "images_url": [
                         f"https://storage.googleapis.com/{GS_BUCKET_NAME}/{image.image_data}"
                         for image in line.images_url.all()
@@ -527,7 +545,7 @@ class ContainerDetailView(LoginRequiredMixin, View):
         container_id = self.kwargs.get("pk")
         context = self.get_context(container_id)
 
-        return render(request, "delivery_stock/container_detail.html", context) 
+        return render(request, "delivery_stock/container_detail.html", context)
 
 
 class SupplierListView(LoginRequiredMixin, View):

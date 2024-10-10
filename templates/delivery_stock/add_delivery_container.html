@@ -22,9 +22,10 @@
     <input type="hidden" name="delivery_cont_id" value="{{ delivery_cont_id }}" id="delivery_cont_id">
 
     <input type="hidden" name="button_id" id="button_id" value="">
-
-    <input class="btn btn-secondary" type="submit" id="add_line_btn" value="Add line" style="width: 100%;" onclick="setButtonId('add_line_btn')">
-    <br><br>
+    {%if delivery_cont_id %}
+        <input class="btn btn-secondary" type="submit" id="add_line_btn" value="Add line" style="width: 100%;" onclick="setButtonId('add_line_btn')">
+        <br><br>
+    {% endif %}
 
     <input class="btn btn-secondary" type="submit" id="add_container_btn" value="Add container" style="width: 100%;" onclick="setButtonId('add_container_btn')">
     <br><br>

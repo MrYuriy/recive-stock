@@ -58,8 +58,12 @@
             {% if line.not_sys_barcode %}
                 <p><strong>Kod kreskowy (nie systemowy):</strong> {{ line.not_sys_barcode }}</p>
             {% endif %}
-            <p><strong>SKU:</strong> {{ line.suplier_sku }}</p>
+            {% if line.suplier_sku %}
+                <p><strong>SKU:</strong> {{ line.suplier_sku }}</p>
+                <p><strong>Description:</strong> {{ line.deskription }}</p>
+                <p><strong>EAN:</strong> {{ line.ean }}</p>
 
+            {% endif %}
             <!-- Display images if available -->
             {% if line.images_url %}
                 <p><strong>Zdjęcia:</strong></p>
