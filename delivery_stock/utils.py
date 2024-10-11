@@ -1,7 +1,6 @@
 from delivery_stock.models import (
     DeliveryContainer, 
-    ImageModel, Location,
-    FirstRecDelivery
+    ImageModel, Location
     )
 import io
 from reportlab.pdfgen import canvas
@@ -24,15 +23,12 @@ def relocate_or_get_error(identifier, to_location, *args, **kwargs):
     try:
         delivery = DeliveryContainer.objects.get(identifier=identifier)
     except DeliveryContainer.DoesNotExist:
-        try:
-            delivery = FirstRecDelivery.objects.get(identifier=identifier)
-        except FirstRecDelivery.DoesNotExist:
-            if error_message:
-                error_message += " i identyfikator."
-            else:
-                error_message = "Nieprawidłowy identyfikator."
-            del auto_in_val["identifier"]
-            status = False
+        if error_message:
+            error_message += " i identyfikator."
+        else:
+            error_message = "Nieprawidłowy identyfikator."
+        del auto_in_val["identifier"]
+        status = False
 
     if status:
         # if delivery.complite_status:
