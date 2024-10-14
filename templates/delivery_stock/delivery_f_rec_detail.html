@@ -9,12 +9,19 @@
     <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:store_first_rec' %}" title="Wróć">
         <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
     </a>   
+    <form action="{% url 'delivery_stock:generaport' %}" method="post" target="_blank" style="display: inline; float: right;">
+        {% csrf_token %}
+        <input type="hidden", name="delivery_id", value="{{ delivery.id }}">
+        <button type="submit" class="btn btn-outline-secondary" title="wygeneruj raport uszkodzeń PDF">
+            <img src="{% static '/img/file-pdf.svg' %}" alt="wygeneruj raport uszkodzeń PDF">
+        </button>
+    </form>
     
-    {% if not delivery.complite_status %}
+    {% comment %} {% if not delivery.complite_status %}
         <button id="lovoShowButton" name="lovo_show" type="button" class="btn btn-outline-secondary" title="Lovo link">
             <img src="{% static '/img/link.svg' %}" alt="Lovo link"> 
         </button>
-    {% endif %}
+    {% endif %} {% endcomment %}
     
 
 {% endblock %}

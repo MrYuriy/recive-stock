@@ -1,5 +1,5 @@
 from datetime import datetime
-from django.http import HttpResponseBadRequest
+from django.http import FileResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views import View
 
-from delivery_stock.utils import relocate_or_get_error, save_images_for_object, print_labels
+from delivery_stock.utils import gen_pdf_recive_report, relocate_or_get_error, save_images_for_object, print_labels
 from recive_stock.settings import GS_BUCKET_NAME
 from .models import (
     ContainerLine,
@@ -843,3 +843,14 @@ class RelocationView(LoginRequiredMixin, View):
             )
         else:
             return render(request, self.template_name, context)
+
+
+def gen_first_rec_pdf_report(request):
+    delivery_id = request.POST.get("delivery_id")
+
+    delivery = FirstRecDelivery.objects.get(id=delivery_id)
+
+    report = gen_pdf_recive_report(delivery)
+
+    response = FileResponse(report, as_attachment=False, filename="Protokół szkody.pdf")
+    return response

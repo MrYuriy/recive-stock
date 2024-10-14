@@ -24,6 +24,7 @@ from delivery_stock.views import (
     SuplierSKUListView,
     SuplierSKUUpdateView,
     admin_panel,
+    gen_first_rec_pdf_report,
 )
 
 urlpatterns = [
@@ -33,6 +34,7 @@ urlpatterns = [
     path("first-rec/create/", DeliveryFirsrRecCreateView.as_view(), name="first_rec_del_create"),
     path("second-rec/create/", DeliverySecondRecCreateView.as_view(), name="second_rec_del_create"),
     path("add-delivery-container/", DeliveryContainerView.as_view(), name="add_delivery_cont"),
+    path("print-report/", gen_first_rec_pdf_report, name="generaport"),
     path("add-container-line/", ContainerLineView.as_view(), name="add_cont_line"),
     path("add-image/", DeliveryImageAddView.as_view(), name="add_image"),
     path("storage/", DeliveryStorageView.as_view(), name="delivery_storage"),

@@ -58,9 +58,9 @@ def relocate_or_get_error(identifier, to_location, *args, **kwargs):
 
 
 def gen_pdf_recive_report(delivery):
-    date_recive = delivery.date_recive.strftime("%Y-%m-%d")
+    date_recive = delivery.date_recive.strftime("%Y.%m.%d")
     supplier = delivery.supplier_company.name
-    warehous_adres = "Centrum Logistyczne Leroy Merlin\nul. Łowicka 33\n99-120 Piątek"
+    warehous_adres = "Centrum Logistyczne Leroy Merlin ul. Łowicka 33 99-120 Piątek"
     recive_person = delivery.user.full_name
     recive_unit = delivery.recive_unit
     qty_unit = delivery.qty_unit
@@ -73,6 +73,20 @@ def gen_pdf_recive_report(delivery):
     my_canvas = canvas.Canvas(buffer)
     my_canvas.drawImage(recive_report_path, 0, 0, width=602, height=840)
     my_canvas.setFont("FreeSans", 10)
+    
+    my_canvas.drawString(50, 665, f"{date_recive}")
+    my_canvas.drawString(150, 610, f"{recive_person}")
+    my_canvas.drawString(40, 560, f"{supplier}")
+    my_canvas.setFont("FreeSans", 8)
+    my_canvas.drawString(270, 560, f"{warehous_adres}")
+    my_canvas.setFont("FreeSans", 12)
+    my_canvas.drawString(36, 444, "X")
+    my_canvas.drawString(40, 290, f"{qty_unit}")
+    my_canvas.drawString(140, 290, f"{recive_unit}")
+    my_canvas.setFont("FreeSans", 10)
+    my_canvas.drawString(220, 290, reasone_comment)
+
+
 
 
     my_canvas.showPage()
