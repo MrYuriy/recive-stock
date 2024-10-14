@@ -12,4 +12,5 @@ staticfiles/
 users.xls
 reasons.xls
 suppliers.xls
+locations.xls
 cred.json
