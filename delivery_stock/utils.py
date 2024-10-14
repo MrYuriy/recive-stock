@@ -1,12 +1,17 @@
 from delivery_stock.models import (
     DeliveryContainer, 
-    ImageModel, Location
+    ImageModel, Location,
+    SecondRecDelivery
     )
 import io
 from reportlab.pdfgen import canvas
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+
+import requests
+
+from recive_stock.settings import CUPS_POST_URL
 
 
 def relocate_or_get_error(identifier, to_location, *args, **kwargs):
@@ -87,3 +92,49 @@ def save_images_for_object(request, obj, prefix):
             image_instances = ImageModel.objects.bulk_create(images)
             obj.images_url.add(*image_instances)
             obj.save()
+
+def get_line_info(line):
+    if line.suplier_sku:
+        return f"SKU: {line.suplier_sku.sku} QTY: {line.qty_unit} Jednostka: {line.recive_unit} & Description: {line.suplier_sku.deskription}"
+    return f"QTY: {line.qty_unit} Jednostka: {line.recive_unit} &EAN: {line.not_sys_barcode}"
+
+
+def print_labels(delivery_id):
+    try:
+        second_rec_delivery = (
+            SecondRecDelivery.objects
+            .select_related('supplier_company', 'user')
+            .prefetch_related('deliverycontainer_set__containerline_set') 
+            .get(id=delivery_id)
+        )
+
+        containers_info = []
+        delivery_part = 1
+        deliverycontainer_set = second_rec_delivery.deliverycontainer_set.all()
+        for container in deliverycontainer_set:
+            container_info = {
+                "supplier_company": str(second_rec_delivery.supplier_company),
+                "user": second_rec_delivery.user.username,
+                "data": second_rec_delivery.date_recive.strftime("%Y/%m/%d"),
+                "pre_advice": second_rec_delivery.pre_advice_nr,
+                "master_id": second_rec_delivery.master_nr,
+                "identifier": container.identifier,
+                "delivery_part": f"{delivery_part}/{len(deliverycontainer_set)}",
+                "lines_info": []
+            }
+            delivery_part += 1
+            for line in container.containerline_set.all():
+                line_info = {
+                    "label_title": f"Line {line.line_nr}: {line.reasone_comment}",
+                    "line_info": get_line_info(line),
+                }
+                container_info["lines_info"].append(line_info)
+
+            containers_info.append(container_info)
+        try:
+            requests.post(CUPS_POST_URL, json=containers_info)
+        except TimeoutError:
+            pass
+        
+    except SecondRecDelivery.DoesNotExist:
+        return {"error": f"No delivery found with ID {delivery_id}"}

@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views import View
 
-from delivery_stock.utils import relocate_or_get_error, save_images_for_object
+from delivery_stock.utils import relocate_or_get_error, save_images_for_object, print_labels
 from recive_stock.settings import GS_BUCKET_NAME
 from .models import (
     ContainerLine,
@@ -186,6 +186,8 @@ class DeliveryContainerView(LoginRequiredMixin, View):
                 + f"?delivery_id={delivery.id}&delivery_cont_id={delivery_cont.id}"
             )
         elif button_id == "finish_btn":
+            # do print labels here
+            print_labels(delivery_id)
             return render(request, "delivery_stock/select_reception.html")
 
 
