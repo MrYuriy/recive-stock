@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views import View
 
-from delivery_stock.utils import gen_pdf_recive_report, relocate_or_get_error, save_images_for_object, print_labels
+from delivery_stock.utils import gen_damage_protocol, gen_pdf_recive_report, relocate_or_get_error, save_images_for_object, print_labels
 from recive_stock.settings import GS_BUCKET_NAME
 from .models import (
     ContainerLine,
@@ -509,6 +509,7 @@ class ContainerDetailView(LoginRequiredMixin, View):
         )
 
         container_data = {
+            "container_id": container_id,
             "identifier": container.identifier,
             "recive_location": container.recive_location.name,
             "location": container.location.name,
@@ -548,6 +549,17 @@ class ContainerDetailView(LoginRequiredMixin, View):
         context = self.get_context(container_id)
 
         return render(request, "delivery_stock/container_detail.html", context)
+    
+
+    def post(self, request, *args, **kwargs):
+        container_id = request.POST.get("container_id")
+        if request.POST.get("add_tir_nr"):
+                delivery = DeliveryContainer.objects.select_related('delivery').get(id=container_id).delivery
+                delivery.tir_nr = request.POST.get("TIR_NR")
+                delivery.save()
+            
+
+        return redirect("delivery_stock:container_detail", pk=container_id)
 
 
 class SupplierListView(LoginRequiredMixin, View):
@@ -852,5 +864,41 @@ def gen_first_rec_pdf_report(request):
 
     report = gen_pdf_recive_report(delivery)
 
+    response = FileResponse(report, as_attachment=False, filename="Protokół szkody.pdf")
+    return response
+
+
+def gen_damage_pdf_protocol(request):
+    container_id = request.POST.get("container_id")
+    container = (
+            DeliveryContainer.objects.select_related(
+                "recive_location", "location", "delivery", "delivery__supplier_company"
+            )
+            .prefetch_related(
+                Prefetch(
+                    "containerline_set",
+                    queryset=ContainerLine.objects.prefetch_related("images_url"),
+                )
+            )
+            .get(id=container_id)
+        )
+    if not container.date_complite:
+        container.date_complite = datetime.now()
+        container.save()
+    
+    lines_info = []
+    for line in container.containerline_set.all():
+        line_info = {}
+        line_info["sku"] = line.suplier_sku.sku if line.suplier_sku else line.not_sys_barcode
+        line_info["description"] = line.suplier_sku.deskription if line.suplier_sku else " - - - - - -"
+        line_info["qty"] = line.qty_unit
+        line_info["recive_unit"] = line.recive_unit
+        line_info["preadvice"] = container.delivery.pre_advice_nr
+        line_info["supplier"] = container.delivery.supplier_company.name
+        line_info["tir_nr"] = container.delivery.tir_nr
+        line_info["date_complite"] = container.date_complite.strftime("%Y.%m.%d")
+        
+        lines_info.append(line_info)
+    report = gen_damage_protocol(lines_info)
     response = FileResponse(report, as_attachment=False, filename="Protokół szkody.pdf")
     return response

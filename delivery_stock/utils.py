@@ -8,6 +8,7 @@ from reportlab.pdfgen import canvas
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.pagesizes import landscape, A4
 
 import requests
 
@@ -86,8 +87,35 @@ def gen_pdf_recive_report(delivery):
     my_canvas.setFont("FreeSans", 10)
     my_canvas.drawString(220, 290, reasone_comment)
 
+    my_canvas.showPage()
+    my_canvas.save()
+    buffer.seek(0)
+    return buffer
 
 
+def gen_damage_protocol(lines_info):
+    damage_report_path = "static/reports/damage_protocol.jpg"
+
+    buffer = io.BytesIO()
+    pdfmetrics.registerFont(TTFont("FreeSans", "freesans/FreeSans.ttf"))
+    my_canvas = canvas.Canvas(buffer)
+    my_canvas = canvas.Canvas(buffer, pagesize=landscape(A4))
+    my_canvas.drawImage(damage_report_path, 0, 0, width=840, height=602)
+    my_canvas.setFont("FreeSans", 10)
+
+    coordinate_Y = 354
+    
+    my_canvas.drawString(90, 440, f"{lines_info[0]["date_complite"]}")
+    my_canvas.drawString(170, 178, f"{lines_info[0]["date_complite"]}")
+    for line in lines_info:
+        my_canvas.drawString(50, coordinate_Y, f"{line["sku"]}")
+        my_canvas.drawString(142, coordinate_Y, line["description"][:25])
+        my_canvas.drawString(300, coordinate_Y, f"{line["qty"]}")
+        my_canvas.drawString(350, coordinate_Y, line["recive_unit"])
+        my_canvas.drawString(450, coordinate_Y, line["preadvice"])
+        my_canvas.drawString(530, coordinate_Y, line["supplier"][:20])
+        my_canvas.drawString(690, coordinate_Y, f"{line["tir_nr"]}")
+        coordinate_Y -= 12
 
     my_canvas.showPage()
     my_canvas.save()
