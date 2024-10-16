@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 
@@ -49,7 +50,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -84,10 +85,22 @@ WSGI_APPLICATION = "recive_stock.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": tmpPostgres.path.replace("/", ""),
+        "USER": tmpPostgres.username,
+        "PASSWORD": tmpPostgres.password,
+        "HOST": tmpPostgres.hostname,
+        "PORT": 5432,
     }
 }
 
@@ -129,8 +142,6 @@ ASSETS_ROOT = "/static/assets"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-
-
 # Google Cloud Storage settings
 GS_BUCKET_NAME = os.environ["GS_BUCKET_NAME"]
 GS_PROJECT_ID = os.environ["GS_PROJECT_ID"]
@@ -143,18 +154,18 @@ GS_AUTO_CREATE_BUCKET = True
 
 # Static and media settings
 MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
-#MEDIA_ROOT = os.path.join(BASE_DIR, MEDIA_URL)
+# MEDIA_ROOT = os.path.join(BASE_DIR, MEDIA_URL)
 
 STORAGES = {
-    'default': {
-        'BACKEND': 'storages.backends.gcloud.GoogleCloudStorage',
-        'OPTIONS': {
-            'bucket_name': GS_BUCKET_NAME,
-            'credentials': GS_CREDENTIALS,  # Optional, only needed if not using the environment variable
+    "default": {
+        "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+        "OPTIONS": {
+            "bucket_name": GS_BUCKET_NAME,
+            "credentials": GS_CREDENTIALS,  # Optional, only needed if not using the environment variable
         },
     },
-    'staticfiles': {
-        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
