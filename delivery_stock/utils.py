@@ -113,8 +113,8 @@ def gen_damage_protocol(lines_info):
 
     coordinate_Y = 354
     
-    my_canvas.drawString(90, 440, f"{lines_info[0]["date_complite"]}")
-    my_canvas.drawString(170, 178, f"{lines_info[0]["date_complite"]}")
+    my_canvas.drawString(90, 440, f"{lines_info[0]['date_complite']}")
+    my_canvas.drawString(170, 178, f"{lines_info[0]['date_complite']}")
     for line in lines_info:
         my_canvas.drawString(50, coordinate_Y, f"{line["sku"]}")
         my_canvas.drawString(142, coordinate_Y, line["description"][:25])
