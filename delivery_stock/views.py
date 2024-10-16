@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views import View
 
-from delivery_stock.utils import gen_damage_protocol, gen_pdf_recive_report, relocate_or_get_error, save_images_for_object, print_labels
+from delivery_stock.utils import gen_damage_protocol, gen_pdf_recive_report, get_transaction_cont_creat_str, get_transaction_line_add_str, relocate_or_get_error, save_images_for_object, print_labels
 from recive_stock.settings import GS_BUCKET_NAME
 from .models import (
     ContainerLine,
@@ -142,6 +142,7 @@ class DeliverySecondRecCreateView(LoginRequiredMixin, View):
             delivery_cont = DeliveryContainer(
                 location=recive_lock, delivery=delivery, recive_location=recive_lock
             )
+            delivery_cont.transaction += get_transaction_cont_creat_str(request)
             delivery.save()
             delivery_cont.save()
             context = {}
@@ -180,6 +181,7 @@ class DeliveryContainerView(LoginRequiredMixin, View):
             delivery_cont = DeliveryContainer(
                 location=rec_loc, delivery=delivery, recive_location=rec_loc
             )
+            delivery_cont.transaction += get_transaction_cont_creat_str(request)
             delivery_cont.save()
             return redirect(
                 reverse("delivery_stock:add_cont_line")
@@ -236,6 +238,7 @@ class ContainerLineView(LoginRequiredMixin, View):
                     recive_location = recive_loc
                 )
                 line_position = 1
+                container.transaction += get_transaction_cont_creat_str(request)
                 container.save()
             
         supplier_sku = (
@@ -252,6 +255,8 @@ class ContainerLineView(LoginRequiredMixin, View):
             line_nr=line_position,
             not_sys_barcode=ean if supplier_sku is None else None,
         )
+        container.transaction += get_transaction_line_add_str(request, line_position)
+        container.save()
         cont_line.save()
         if request.FILES:
             save_images_for_object(request, cont_line, container.id)
@@ -520,6 +525,7 @@ class ContainerDetailView(LoginRequiredMixin, View):
             "master_nr": container.delivery.master_nr,
             "tir_nr": container.delivery.tir_nr,
             "date_complite": container.date_complite,
+            "transaction": container.transaction
         }
 
         lines_data = []

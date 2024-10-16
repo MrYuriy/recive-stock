@@ -153,6 +153,7 @@ class DeliveryContainer(models.Model):
     lovo_name = models.TextField(blank=True, null=True)
     delivery = models.ForeignKey(SecondRecDelivery, on_delete=models.CASCADE)
     date_complite = models.DateTimeField(null=True , blank=True)
+    transaction = models.TextField(blank=True, null=True, default="")
 
     def __str__(self) -> str:
         return f"{self.identifier} {self.delivery.identifier}"

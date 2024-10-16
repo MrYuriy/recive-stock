@@ -64,6 +64,7 @@
         <p class="alert alert-dark">TIR nr: {{ tir_nr }}</p>
     {% endif %}
     <p class="alert alert-dark">Data zakończenia: {{ date_complite }}</p>
+    <p class="alert alert-dark">Transaction: {{ transaction | linebreaksbr}}</p>
 
     <!-- Loop through container lines -->
     {% for line in container_lines %}

@@ -1,3 +1,4 @@
+from datetime import datetime
 from delivery_stock.models import (
     DeliveryContainer, 
     ImageModel, Location,
@@ -14,8 +15,11 @@ import requests
 
 from recive_stock.settings import CUPS_POST_URL
 
-
-def relocate_or_get_error(identifier, to_location, *args, **kwargs):
+def get_transaction_reloc_str(from_loc, to_loc, request):
+    return f"{datetime.now().strftime('%Y-%d-%m')} \
+        Użytkownik {request.user.username} przeniósł kontener z lokalizacji \
+            {from_loc} do lokalizacji {to_loc}"
+def relocate_or_get_error(identifier, to_location, request):
     error_message = ""
     status = True
     auto_in_val = {"identifier": identifier, "to_location": to_location}
@@ -27,7 +31,7 @@ def relocate_or_get_error(identifier, to_location, *args, **kwargs):
         del auto_in_val["to_location"]
         status = False
     try:
-        delivery = DeliveryContainer.objects.get(identifier=identifier)
+        delivery_cont = DeliveryContainer.objects.get(identifier=identifier)
     except DeliveryContainer.DoesNotExist:
         if error_message:
             error_message += " i identyfikator."
@@ -43,16 +47,20 @@ def relocate_or_get_error(identifier, to_location, *args, **kwargs):
         #     error_message = "Zamówienie ma status complete"
         #     return {"status": False, "error_message": error_message} | auto_in_val
             
-        if to_location == delivery.location:
+        if to_location == delivery_cont.location:
             del auto_in_val["to_location"]
             error_message = "Ta dostawa już jest w tej lokalizacji wybierz inną lokalizację"
             return {"status": False, "error_message": error_message} | auto_in_val
         
         # if to_location.work_zone == 4:
         #     delivery.complite_status = True
-
-        delivery.location = to_location
-        delivery.save()
+        delivery_cont.transaction += get_transaction_reloc_str(
+            from_loc=delivery_cont.location.name,
+            to_loc=to_location.name,
+            request=request
+        )
+        delivery_cont.location = to_location
+        delivery_cont.save()
         return {"status": status}
     return {"status": status, "error_message": error_message} | auto_in_val
 
@@ -180,3 +188,10 @@ def print_labels(delivery_id):
         
     except SecondRecDelivery.DoesNotExist:
         return {"error": f"No delivery found with ID {delivery_id}"}
+    
+
+def get_transaction_cont_creat_str(request):
+    return f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')} Użytkownik {request.user.username} utworzył nowy container\n"
+
+def get_transaction_line_add_str(request, line_position):
+    return f"{datetime.now().strftime('%Y-%d-%m')} Użytkownik {request.user.username} dodał nową linię {line_position} do kontenera \n"
