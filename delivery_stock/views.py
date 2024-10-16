@@ -81,7 +81,7 @@ class DeliveryFirsrRecCreateView(LoginRequiredMixin, View):
         tir_nr = request.POST.get("tir_nr")
         container_nr = request.POST.get("container_nr") or None
         date_recive = datetime.now()
-        recive_lock, _ = Location.objects.get_or_create(name="1R-STOCK", work_zone=1)
+        recive_lock = Location.objects.get(name="1R-STOCK", work_zone=1)
 
         with transaction.atomic():
             delivery = FirstRecDelivery.objects.create(
@@ -129,7 +129,7 @@ class DeliverySecondRecCreateView(LoginRequiredMixin, View):
         pre_advice = request.POST.get("pre_advice", None)
         master_nr = request.POST.get("master_nr")
         date_recive = datetime.now()
-        recive_lock, _ = Location.objects.get_or_create(name="2R-STOCK", work_zone=1)
+        recive_lock = Location.objects.get(name="2R-STOCK", work_zone=1)
 
         with transaction.atomic():
             delivery = SecondRecDelivery.objects.create(
