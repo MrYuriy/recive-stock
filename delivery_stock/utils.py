@@ -116,13 +116,13 @@ def gen_damage_protocol(lines_info):
     my_canvas.drawString(90, 440, f"{lines_info[0]['date_complite']}")
     my_canvas.drawString(170, 178, f"{lines_info[0]['date_complite']}")
     for line in lines_info:
-        my_canvas.drawString(50, coordinate_Y, f"{line["sku"]}")
+        my_canvas.drawString(50, coordinate_Y, f"{line['sku']}")
         my_canvas.drawString(142, coordinate_Y, line["description"][:25])
-        my_canvas.drawString(300, coordinate_Y, f"{line["qty"]}")
+        my_canvas.drawString(300, coordinate_Y, f"{line['qty']}")
         my_canvas.drawString(350, coordinate_Y, line["recive_unit"])
         my_canvas.drawString(450, coordinate_Y, line["preadvice"])
-        my_canvas.drawString(530, coordinate_Y, line["supplier"][:20])
-        my_canvas.drawString(690, coordinate_Y, f"{line["tir_nr"]}")
+        my_canvas.drawString(530, coordinate_Y, line['supplier'][:20])
+        my_canvas.drawString(690, coordinate_Y, f"{line['tir_nr']}")
         coordinate_Y -= 12
 
     my_canvas.showPage()
