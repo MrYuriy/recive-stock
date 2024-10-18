@@ -575,10 +575,9 @@ class DeliveryContainerRepacView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         context = do_repack(request)
-        if context["status"]:
+        if "error_message" not in context:
             return redirect("delivery_stock:repac_cont")
         else:
-            print("Kurwa")
             return render(request, self.template_name, context)
         
         

@@ -199,98 +199,135 @@ def get_transaction_cont_creat_str(request):
 def get_transaction_line_add_str(request, line_position):
     return f"{datetime.now().strftime('%Y-%d-%m')} Użytkownik {request.user.username} dodał nową linię {line_position} do kontenera \n"
 
-def do_split_lines(old_line: ContainerLine, qty: int):
-    """if new qty recive units dont equel fture recive units"""
+def do_split_line(old_line: ContainerLine, qty: int):
+    """Split the container line into a new line if the new qty doesn't match future recive units."""
+    # Create the new line without assigning the ManyToMany field 'images_url' initially
     new_line = ContainerLine(
-        reasone_comment = old_line.reasone_comment,
-        qty_unit = qty,
-        recive_unit = old_line.recive_unit,
-        not_sys_barcode = old_line.not_sys_barcode,
-        suplier_sku = old_line.suplier_sku,
-        container = old_line.container,
-        images_url = old_line.images_url,
-        line_nr = 10
+        reasone_comment=old_line.reasone_comment,
+        qty_unit=qty,
+        recive_unit=old_line.recive_unit,
+        not_sys_barcode=old_line.not_sys_barcode,
+        suplier_sku=old_line.suplier_sku,
+        container=old_line.container,
+        line_nr=10  # Set the line number as needed (adjust if required)
     )
+    
+    # Save the new line before setting the ManyToMany field
+    new_line.save()
+    
+    # Copy over the images_url using the set() method
+    new_line.images_url.set(old_line.images_url.all())
+
+    # Update the old line's quantity
     old_line.qty_unit -= qty
     old_line.save()
+
     return new_line
+
+
+def get_container_by_identifier(identifier):
+    """Fetches the DeliveryContainer by identifier or returns None."""
+    try:
+        return DeliveryContainer.objects.get(identifier=identifier)
+    except DeliveryContainer.DoesNotExist:
+        return None
+
+
+def validate_container_line(cont_lines, line_id, qty, context):
+    """Validates the container line and returns appropriate context errors if needed."""
+    cont_line = cont_lines.filter(line_nr=line_id).first()
+    
+    if not cont_line:
+        del context["line_id"]
+        context["error_message"] = "Linia nie istnieje"
+        return None, context
+
+    if cont_line.recive_unit == "pall.full.":
+        context["error_message"] = "Nie można przepakować kontenera z pełnej palety"
+        del context["to_cont"]
+        return None, context
+
+    if qty and cont_line.qty_unit < qty:
+        context["error_message"] = "Nie można przepakować większej liczby jednostek niż wynosi obecny kontener"
+        del context["qty"]
+        return None, context
+
+    return cont_line, context
+
+
+def validate_future_container(future_cont, current_cont, context):
+    """Validates the future container for delivery and type checks."""
+    if future_cont.delivery != current_cont.delivery:
+        context["error_message"] = "Nie można przepakować kontenera z różnych dostaw"
+        return False, context
+
+    if ContainerLine.objects.filter(container__identifier=future_cont.identifier, recive_unit="pall.full.").exists():
+        context["error_message"] = "Nie można przepakować kontenera do pełnej palety"
+        del context["to_cont"]
+        return False, context
+
+    return True, context
+
+
+def create_new_container_from_current(current_cont, request):
+    """Creates a new DeliveryContainer based on the current one."""
+    return DeliveryContainer.objects.create(
+        recive_location=current_cont.recive_location,
+        location=current_cont.location,
+        delivery=current_cont.delivery,
+        transaction=get_transaction_cont_creat_str(request),
+    )
+
 
 def do_repack(request):
     from_cont = request.POST.get("from_cont")
-    to_cont = request.POST.get("to_cont") or None
+    to_cont = request.POST.get("to_cont")
     line_id = request.POST.get("line_id")
-    qty = request.POST.get("qty") or 0
+    qty = int(request.POST.get("qty") or 0 )
 
-    context = {}
-    context["status"] = True
-    context["from_cont"] = from_cont
-    context["to_cont"] = to_cont
-    context["line_id"] = line_id
-    context["qty"] = qty
-    print(from_cont, to_cont, line_id, qty)
+    context = {
+        "from_cont": from_cont, 
+        "to_cont": to_cont, 
+        "line_id": line_id, 
+        "qty": qty
+        }
 
-    try:
-        curent_cont = DeliveryContainer.objects.get(identifier=from_cont)
-    except DeliveryContainer.DoesNotExist:
-        context["status"] = False
+    # Fetch current container
+    current_cont = get_container_by_identifier(from_cont)
+    if not current_cont:
         del context["from_cont"]
+        context["error_message"] = "Kontener nie istnieje"
         return context
 
+    # Fetch container lines
+    cont_lines = ContainerLine.objects.filter(container__identifier=from_cont)
+    
+    if len(cont_lines) <= 1 and qty <= 0:
+        context["error_message"] = "Kontener ma 1 linię więc podaj liczbę mniejszą od ilośći bieżącej linii"
+        return context
 
-    cont_line = ContainerLine.objects.select_related("container").filter(
-        container__identifier=from_cont,
-        line_nr=line_id
-    ).first()
+    # Validate container line
+    cont_line, context = validate_container_line(cont_lines, line_id, qty, context)
+    if not cont_line:
+        return context
 
-    try:
-        future_cont = DeliveryContainer.objects.get(identifier=to_cont)
-        if future_cont.delivery != curent_cont.delivery:
-            context = {}
-            context["status"] = False
-            context["error_message"] = "Nie można przepakować kontenera z różnych dostaw"
-            return context
-        if ContainerLine.objects.filter(container__identifier=to_cont,recive_unit="pall.full."):
-            context["status"] = False
-            context["error_message"] = "Nie można przepakować kontenera do pełnej palety"
-            del context["to_cont"]
-            return context
-        if ContainerLine.objects.filter(container__identifier=from_cont,recive_unit="pall.full."):
-            context["status"] = False
-            context["error_message"] = "Nie można przepakować kontenera z pełnej palety"
-            del context["to_cont"]
-            return context
-        if qty:
-            if cont_line.qty_unit < qty:
-                context["status"] = False
-                context["error_message"] = "Nie można przepakować większej liczby jednostek niż wynosi obecny kontener"
-                del context["qty"]
-                return context
-            if cont_line.qty_unit > qty and qty != 0:
-                cont_line = do_split_lines(cont_line, qty)
-        cont_line.container = future_cont
-        cont_line.line_nr = ContainerLine.objects.filter(container=future_cont).aggregate(Max("line_nr"))["line_nr__max"] + 1
-        cont_line.save()
-    except DeliveryContainer.DoesNotExist:
-        future_cont = DeliveryContainer(
-            recive_location = curent_cont.recive_location,
-            location = curent_cont.location,
-            delivery = curent_cont.delivery,
-            transaction = get_transaction_cont_creat_str(request)
-        )
-        future_cont.save()
-        if qty:
-            if cont_line.qty_unit < qty:
-                context["status"] = False
-                context["error_message"] = "Nie można przepakować większej liczby jednostek niż wynosi obecny kontener"
-                del context["qty"]
-                return context
-            if cont_line.qty_unit > qty and qty != 0:
-                cont_line = do_split_lines(cont_line, qty)
-        cont_line.container = future_cont
-        cont_line.line_nr = 1
-        cont_line.save()
+    # Handle quantity adjustments if needed
+    if qty and cont_line.qty_unit > qty:
+        cont_line = do_split_line(cont_line, qty)
 
-    if len(ContainerLine.objects.filter(container=curent_cont)) == 0:
-        curent_cont.delete()
+    # Fetch or create future container
+    future_cont = get_container_by_identifier(to_cont)
+    
+    if future_cont:
+        is_valid, context = validate_future_container(future_cont, current_cont, context)
+        if not is_valid:
+            return context
+    else:
+        future_cont = create_new_container_from_current(current_cont, request)
+
+    # Update line and save
+    cont_line.container = future_cont
+    cont_line.line_nr = ContainerLine.objects.filter(container=future_cont).aggregate(Max("line_nr"))["line_nr__max"] + 1
+    cont_line.save()
+
     return context
-
