@@ -756,7 +756,7 @@ class SuplierSKUListView(LoginRequiredMixin, View):
             )
 
         page = request.GET.get("page", 1)
-        paginator = Paginator(queryset.order_by("sku"), 2)
+        paginator = Paginator(queryset.order_by("sku"), 500)
         try:
             sku_list = paginator.page(page)
         except PageNotAnInteger:
