@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block navigation %}
+    <nav class="navigation">
+        <a class="btn btn-secondary" role="button" href="{% url 'delivery_stock:home' %}">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+    </nav>
+    <br>
+{% endblock %}
+
+{% block content %}
+<form method="post" action="{% url 'delivery_stock:repac_cont' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">From Cont*: </span>
+        <input type="number" style="width: 65%;" name="from_cont" value="{{ from_cont }}" required>
+    </div>
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">To Cont: </span>
+        <input type="number" style="width: 65%;" name="to_cont" value="{{ to_cont }}">
+    </div>
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">Line*: </span>
+        <input type="number" style="width: 65%;" name="line_id" value="{{ line_id }}" required>
+    </div>
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">QTY:: </span>
+        <input type="number" style="width: 65%;" name="qty" value="{{ qty }}">
+    </div>
+
+    <button type="submit" style="width: 100%;">
+        Repac <img src="{% static '/img/repack.svg' %}" alt="Do główną">
+    </button>
+</form>
+
+{% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+{% endif %}
+
+{% endblock %}

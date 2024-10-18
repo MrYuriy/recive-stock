@@ -23,8 +23,14 @@
 <br>
 
 <a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
-role="button" href="{% url 'delivery_stock:delivery_relocation' %}" 
-style="font-size: 30px; padding: 10px;">Relokacja </a>
+    role="button" href="{% url 'delivery_stock:delivery_relocation' %}" 
+    style="font-size: 30px; padding: 10px;">Relokacja 
+</a>
+<br>
+<a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+    role="button" href="{% url 'delivery_stock:repac_cont' %}" 
+    style="font-size: 30px; padding: 10px;">Repac 
+</a>
 <br>
 {%if request.user.role == 'admin' or request.user.is_superuser %}
     <a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 

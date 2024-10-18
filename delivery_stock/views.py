@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views import View
 
-from delivery_stock.utils import gen_damage_protocol, gen_pdf_recive_report, get_transaction_cont_creat_str, get_transaction_line_add_str, relocate_or_get_error, save_images_for_object, print_labels
+from delivery_stock.utils import do_repack, gen_damage_protocol, gen_pdf_recive_report, get_transaction_cont_creat_str, get_transaction_line_add_str, relocate_or_get_error, save_images_for_object, print_labels
 from recive_stock.settings import GS_BUCKET_NAME
 from .models import (
     ContainerLine,
@@ -566,6 +566,22 @@ class ContainerDetailView(LoginRequiredMixin, View):
             
 
         return redirect("delivery_stock:container_detail", pk=container_id)
+
+
+class DeliveryContainerRepacView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/delivery_container_repac.html"
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        context = do_repack(request)
+        if context["status"]:
+            return redirect("delivery_stock:repac_cont")
+        else:
+            print("Kurwa")
+            return render(request, self.template_name, context)
+        
+        
 
 
 class SupplierListView(LoginRequiredMixin, View):

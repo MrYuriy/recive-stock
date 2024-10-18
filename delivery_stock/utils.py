@@ -1,5 +1,6 @@
 from datetime import datetime
 from delivery_stock.models import (
+    ContainerLine,
     DeliveryContainer, 
     ImageModel, Location,
     SecondRecDelivery
@@ -12,6 +13,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import landscape, A4
 
 import requests
+from django.db.models import Max
+
 
 from recive_stock.settings import CUPS_POST_URL
 
@@ -195,3 +198,99 @@ def get_transaction_cont_creat_str(request):
 
 def get_transaction_line_add_str(request, line_position):
     return f"{datetime.now().strftime('%Y-%d-%m')} Użytkownik {request.user.username} dodał nową linię {line_position} do kontenera \n"
+
+def do_split_lines(old_line: ContainerLine, qty: int):
+    """if new qty recive units dont equel fture recive units"""
+    new_line = ContainerLine(
+        reasone_comment = old_line.reasone_comment,
+        qty_unit = qty,
+        recive_unit = old_line.recive_unit,
+        not_sys_barcode = old_line.not_sys_barcode,
+        suplier_sku = old_line.suplier_sku,
+        container = old_line.container,
+        images_url = old_line.images_url,
+        line_nr = 10
+    )
+    old_line.qty_unit -= qty
+    old_line.save()
+    return new_line
+
+def do_repack(request):
+    from_cont = request.POST.get("from_cont")
+    to_cont = request.POST.get("to_cont") or None
+    line_id = request.POST.get("line_id")
+    qty = request.POST.get("qty") or 0
+
+    context = {}
+    context["status"] = True
+    context["from_cont"] = from_cont
+    context["to_cont"] = to_cont
+    context["line_id"] = line_id
+    context["qty"] = qty
+    print(from_cont, to_cont, line_id, qty)
+
+    try:
+        curent_cont = DeliveryContainer.objects.get(identifier=from_cont)
+    except DeliveryContainer.DoesNotExist:
+        context["status"] = False
+        del context["from_cont"]
+        return context
+
+
+    cont_line = ContainerLine.objects.select_related("container").filter(
+        container__identifier=from_cont,
+        line_nr=line_id
+    ).first()
+
+    try:
+        future_cont = DeliveryContainer.objects.get(identifier=to_cont)
+        if future_cont.delivery != curent_cont.delivery:
+            context = {}
+            context["status"] = False
+            context["error_message"] = "Nie można przepakować kontenera z różnych dostaw"
+            return context
+        if ContainerLine.objects.filter(container__identifier=to_cont,recive_unit="pall.full."):
+            context["status"] = False
+            context["error_message"] = "Nie można przepakować kontenera do pełnej palety"
+            del context["to_cont"]
+            return context
+        if ContainerLine.objects.filter(container__identifier=from_cont,recive_unit="pall.full."):
+            context["status"] = False
+            context["error_message"] = "Nie można przepakować kontenera z pełnej palety"
+            del context["to_cont"]
+            return context
+        if qty:
+            if cont_line.qty_unit < qty:
+                context["status"] = False
+                context["error_message"] = "Nie można przepakować większej liczby jednostek niż wynosi obecny kontener"
+                del context["qty"]
+                return context
+            if cont_line.qty_unit > qty and qty != 0:
+                cont_line = do_split_lines(cont_line, qty)
+        cont_line.container = future_cont
+        cont_line.line_nr = ContainerLine.objects.filter(container=future_cont).aggregate(Max("line_nr"))["line_nr__max"] + 1
+        cont_line.save()
+    except DeliveryContainer.DoesNotExist:
+        future_cont = DeliveryContainer(
+            recive_location = curent_cont.recive_location,
+            location = curent_cont.location,
+            delivery = curent_cont.delivery,
+            transaction = get_transaction_cont_creat_str(request)
+        )
+        future_cont.save()
+        if qty:
+            if cont_line.qty_unit < qty:
+                context["status"] = False
+                context["error_message"] = "Nie można przepakować większej liczby jednostek niż wynosi obecny kontener"
+                del context["qty"]
+                return context
+            if cont_line.qty_unit > qty and qty != 0:
+                cont_line = do_split_lines(cont_line, qty)
+        cont_line.container = future_cont
+        cont_line.line_nr = 1
+        cont_line.save()
+
+    if len(ContainerLine.objects.filter(container=curent_cont)) == 0:
+        curent_cont.delete()
+    return context
+

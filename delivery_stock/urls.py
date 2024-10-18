@@ -3,6 +3,7 @@ from django.urls import path
 from delivery_stock.views import (
     ContainerDetailView,
     DeleveryFirsRecDetailView,
+    DeliveryContainerRepacView,
     DeliveryFirsrRecCreateView, 
     DeliveryImageAddView, 
     DeliverySecondRecCreateView,
@@ -35,6 +36,7 @@ urlpatterns = [
     path("first-rec/create/", DeliveryFirsrRecCreateView.as_view(), name="first_rec_del_create"),
     path("second-rec/create/", DeliverySecondRecCreateView.as_view(), name="second_rec_del_create"),
     path("add-delivery-container/", DeliveryContainerView.as_view(), name="add_delivery_cont"),
+    path("repac-delivery-container", DeliveryContainerRepacView.as_view(), name="repac_cont"),
     path("print-report/", gen_first_rec_pdf_report, name="generaport"),
     path("print-damage-protocol", gen_damage_pdf_protocol, name="gen_damage_report"),
     path("add-container-line/", ContainerLineView.as_view(), name="add_cont_line"),
