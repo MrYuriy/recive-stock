@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load crispy_forms_filters %}
+{% load static %}
+
+{% block title %}{% endblock %}
+
+{% block content %}
+{% comment %} <div class="d-flex align-items-center justify-content-center"> {% endcomment %}
+<a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+   role="button" href="{% url 'delivery_stock:select_receprion' %}" 
+   style="font-size: 30px; padding: 10px;">Nowe Delivery</a>
+<br>
+{% comment %} <a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+    role="button" href="{% url 'delivery_stock:delivery_storage' %}" 
+    style="font-size: 30px; padding: 10px;">Sprawdź bazę 
+</a>
+<br> {% endcomment %}
+
+<a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+    role="button" href="{% url 'delivery_stock:select_store_receprion' %}" 
+    style="font-size: 30px; padding: 10px;">Sprawdź bazę
+</a>
+<br>
+
+<a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+    role="button" href="{% url 'delivery_stock:delivery_relocation' %}" 
+    style="font-size: 30px; padding: 10px;">Relokacja 
+</a>
+<br>
+<a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+    role="button" href="{% url 'delivery_stock:repac_cont' %}" 
+    style="font-size: 30px; padding: 10px;">Repac 
+</a>
+<br>
+{%if request.user.role == 'admin' or request.user.is_superuser %}
+    <a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+    role="button" href="{% url 'delivery_stock:admin_panel' %}" 
+    style="font-size: 30px; padding: 10px;">ADMIN PANEL </a><br>
+{%endif%}
+
+{% if request.user.is_authenticated %}
+    <form action="{% url 'logout' %}" method="post" class="btn btn-outline-secondary d-flex align-items-center justify-content-center">
+      {% csrf_token %}
+      <button type="submit" 
+      class="btn  d-flex align-items-center justify-content-center"
+      style="font-size: 30px; padding: 10px;">Logout</button>
+    </form>
+ 
+{% else %}
+<form action="{% url 'login' %}" method="post" class="btn btn-outline-secondary d-flex align-items-center justify-content-center">
+    {% csrf_token %}
+    <button type="submit" 
+    class="btn  d-flex align-items-center justify-content-center"
+    style="font-size: 30px; padding: 10px;">Login</button>
+  </form>
+{% endif %}
+
+{% endblock %}

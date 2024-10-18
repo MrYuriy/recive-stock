@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% block navigation %}
+    <nav class="navigation">
+        <a class="btn btn-secondary" role="button" href="{% url 'delivery_stock:home' %}">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:location_list' %}">
+            <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+        </a>
+        
+        <form action="{% url 'delivery_stock:location_update' pk=location.id %}" method="post"  style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden", name="delete", value="{{ location.id }}" , id="delete">
+            <button type="submit" class="btn btn-outline-secondary" title="Delete"> 
+                <img src="{% static '/img/trash.svg' %}" alt="Delete">
+            </button>
+        </form>
+    </nav>
+{% endblock %}
+
+{% block content %}
+<br>
+<form method="post" action="{% url 'delivery_stock:location_update' pk=location.id %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">Name: </span>
+        <input type="text" style="width: 65%;" name="location_name" value="{{ location.name }}" required>
+    </div>
+
+    <select name="work_zone" class="form-select" required>
+        {% for code, display_name in location.WORKZON_CHOICES %}
+            <option value="{{ code }}" {% if location.work_zone == code %}selected{% endif %}>{{ display_name }}</option>
+            {% comment %} <option value="{{ code }}">{{ display_name }}</option> {% endcomment %}
+        {% endfor %}
+    </select>
+</br>
+
+    <button type="submit" style="width: 100%;">Update</button>
+</form>
+
+{% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+{% endif %}
+
+{% endblock %}

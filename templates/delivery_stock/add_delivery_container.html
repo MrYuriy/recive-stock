@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load static %}
+<div class="btn-group flex-container">
+{% block navigation %}
+    {% comment %} <nav class="navigation">
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:select_receprion' %}" title="Wróć">
+            <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+        </a>
+        
+    </nav> {% endcomment %}
+{% endblock %}
+
+{% block content %}
+<form method="post" action="{% url 'delivery_stock:add_delivery_cont'%}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <input type="hidden" name="delivery_id" value="{{ delivery_id }}" id="delivery_id">
+    <input type="hidden" name="delivery_cont_id" value="{{ delivery_cont_id }}" id="delivery_cont_id">
+
+    <input type="hidden" name="button_id" id="button_id" value="">
+    {%if delivery_cont_id %}
+        <input class="btn btn-secondary" type="submit" id="add_line_btn" value="Następna linia" style="width: 100%;" onclick="setButtonId('add_line_btn')">
+        <br><br>
+    {% endif %}
+
+    <input class="btn btn-secondary" type="submit" id="add_container_btn" value="Następna paleta" style="width: 100%;" onclick="setButtonId('add_container_btn')">
+    <br><br>
+
+    <input class="btn btn-secondary" type="submit" id="finish_btn" value="Finish" style="width: 100%;" onclick="setButtonId('finish_btn')">
+</form>
+
+{% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+{% endif %}
+<script type="text/javascript">
+    function setButtonId(buttonId) {
+        document.getElementById('button_id').value = buttonId;
+    }
+</script>
+    
+{% endblock %}

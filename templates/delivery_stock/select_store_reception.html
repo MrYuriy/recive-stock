@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load crispy_forms_filters %}
+{% load static %}
+
+{% block navigation %}
+    <nav class="navigation">
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+    </nav>
+{% endblock %}
+
+{% block content %}
+<a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+    role="button" href="{% url 'delivery_stock:store_first_rec' %}"
+    style="font-size: 40px; padding: 10px;">Pierwsza recepcja</a> 
+<br>
+<a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+role="button" href="{% url 'delivery_stock:store_second_rec' %}"
+style="font-size: 40px; padding: 10px;">Druga recepcja</a>
+<br>
+<br>
+{% endblock %}

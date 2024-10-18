@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load static %}
+<div class="btn-group flex-container">
+{% block navigation %}
+    <nav class="navigation">
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:select_receprion' %}" title="Wróć">
+            <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+        </a>
+        
+    </nav>
+{% endblock %}
+
+{% block content %}
+<form method="post" action="{% url 'delivery_stock:second_rec_del_create' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">Dostawca*: </span>
+        <input type="text" style="width: 65%;" name="supplier_company" id="supplier_company_search" autocomplete="off" oninput="searchSupplier()">
+        <div id="supplier_suggestions" onclick="selectSupplier(event)">
+        </div>
+    <input type="hidden" name="selected_supplier_id" id="selected_supplier_id" required>
+    </div>
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">Pre-Advise: </span>
+        <input type="text" style="width: 65%;" name="pre_advice">
+    </div>
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">Master_Pre-Advise: </span>
+        <input type="text" style="width: 65%;" name="master_nr">
+    </div>
+
+    <input class="btn btn-secondary" type="submit" value="Submit" style="width: 100%;"> 
+</form>
+
+{% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+{% endif %}
+    
+{% endblock %}

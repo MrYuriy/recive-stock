@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load static %}
+<div class="btn-group flex-container">
+{% block navigation %}
+    <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+        <img src="{% static '/img/house.svg' %}" alt="Do główną">
+    </a>
+    <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:store_second_rec' %}" title="Wróć">
+        <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+    </a>
+
+    <form action="{% url 'delivery_stock:gen_damage_report' %}" method="post" target="_blank" style="display: inline; float: right;">
+        {% csrf_token %}
+        <input type="hidden" name="container_id" value="{{ container_id }}">
+        <button type="submit" class="btn btn-outline-secondary" title="wygeneruj raport uszkodzeń PDF">
+            <img src="{% static '/img/file-pdf.svg' %}" alt="wygeneruj raport uszkodzeń PDF">
+        </button>
+    </form>
+    <button id="toggleTirSection" class="btn btn-outline-secondary" title="Add tir nr">
+        <img src="{% static '/img/textbox.svg' %}" alt="add tir nr">
+    </button>
+<br>
+<br>
+{% endblock %}
+</div>
+
+{% block content %}
+<div>
+    {% csrf_token %}
+
+    <!-- Lovo Link if exists -->
+    {% if lovo_link %}
+    <p class="alert alert-dark">Sprawa Lovo: 
+        <a target="_blank" class="link-secondary" href="{{ lovo_link }}">{{ lovo_name }}</a>
+    </p>
+    {% endif %}
+
+    <div id="tirSection" style="display: none;">
+        <form action="{% url 'delivery_stock:container_detail' container_id %}" method="post" style="display: flex; width: 100%; margin: 0;">
+            {% csrf_token %}
+            <div class="input-group mb-3" style="width: 100%;">
+                <input type="hidden" name="container_id" value="{{ container_id }}">
+                <input type="hidden" name="add_tir_nr" value="{{ container_id }}">
+
+    
+                <span class="input-group-text" style="width: 35%;">TIR:</span>
+                <input type="text" class="form-control" name="TIR_NR" required style="flex: 1; width: 100%;">
+                <button id="parseButton" class="btn btn-outline-secondary" title="Submit Content" style="border: 1px solid #ccc; padding: 0 10px; height: 38px;">
+                    <img src="{% static '/img/check-fat.svg' %}" alt="Submit">
+                </button>
+            </div>
+        </form>
+    </div>
+    
+
+    <p class="alert alert-dark">Identyfikator kontenera: {{ identifier }}</p>
+    <p class="alert alert-dark">Identyfikator dostawy: {{ delivery_identifier }}</p>
+    <p class="alert alert-dark">Numer zamówienia: {{ pre_advice_nr }}</p>
+    <p class="alert alert-dark">Master nr: {{ master_nr }}</p>
+    <p class="alert alert-dark">Lokalizacja przyjęciowa: {{ recive_location }}</p>
+    <p class="alert alert-dark">Obecna lokalizacja: {{ location }}</p>
+    {% if tir %}
+        <p class="alert alert-dark">TIR nr: {{ tir_nr }}</p>
+    {% endif %}
+    <p class="alert alert-dark">Data zakończenia: {{ date_complite }}</p>
+    <p class="alert alert-dark">Transaction: {{ transaction | linebreaksbr}}</p>
+
+    <!-- Loop through container lines -->
+    {% for line in container_lines %}
+    <div class="alert alert-secondary">
+        <p><strong>Numer linii:</strong> {{ line.line_nr }}</p>
+        <p><strong>Powód:</strong> {{ line.reasone_comment }}</p>
+        <p><strong>Ilość :</strong> {{ line.qty_unit }}</p>
+        <p><strong>Jednostka:</strong> {{ line.recive_unit }}</p>
+        {% if line.not_sys_barcode %}
+            <p><strong>Kod kreskowy (nie systemowy):</strong> {{ line.not_sys_barcode }}</p>
+        {% endif %}
+        {% if line.suplier_sku %}
+            <p><strong>SKU:</strong> {{ line.suplier_sku }}</p>
+            <p><strong>Opis:</strong> {{ line.deskription }}</p>
+            <p><strong>EAN:</strong> {{ line.ean }}</p>
+        {% endif %}
+
+        <!-- Display images if available -->
+        {% if line.images_url %}
+        <p><strong>Zdjęcia:</strong></p>
+        {% for image_url in line.images_url %}
+            <img src="{{ image_url }}" alt="Brak obrazu" style="width: 100%;">
+            <br><br>
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var toggleButton = document.getElementById('toggleTirSection');
+        var tirSection = document.getElementById('tirSection');
+        
+        toggleButton.addEventListener('click', function() {
+            // Перемикаємо клас "visible" для елементу tirSection
+            if (tirSection.style.display === "none" || tirSection.style.display === "") {
+                tirSection.style.display = "block";
+            } else {
+                tirSection.style.display = "none";
+            }
+        });
+    });
+</script>
+{% endblock %}

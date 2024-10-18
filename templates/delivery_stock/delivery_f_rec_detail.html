@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load static %}
+<div class="btn-group flex-container">
+{% block navigation %}
+    <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+        <img src="{% static '/img/house.svg' %}" alt="Do główną">
+    </a>
+    <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:store_first_rec' %}" title="Wróć">
+        <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+    </a>   
+    <form action="{% url 'delivery_stock:generaport' %}" method="post" target="_blank" style="display: inline; float: right;">
+        {% csrf_token %}
+        <input type="hidden", name="delivery_id", value="{{ delivery.id }}">
+        <button type="submit" class="btn btn-outline-secondary" title="wygeneruj raport uszkodzeń PDF">
+            <img src="{% static '/img/file-pdf.svg' %}" alt="wygeneruj raport uszkodzeń PDF">
+        </button>
+    </form>
+    
+    {% comment %} {% if not delivery.complite_status %}
+        <button id="lovoShowButton" name="lovo_show" type="button" class="btn btn-outline-secondary" title="Lovo link">
+            <img src="{% static '/img/link.svg' %}" alt="Lovo link"> 
+        </button>
+    {% endif %} {% endcomment %}
+    
+
+{% endblock %}
+</div>
+{% block content %}
+
+<div>
+    {% csrf_token %}
+    <form action="{% url 'delivery_stock:delivery_f_rec_detail' pk=delivery.id %}" method="post" style="display: inline;">
+        {% csrf_token %}
+        <div>
+            <br>
+            {% csrf_token %}
+            <form action="{% url 'delivery_stock:delivery_f_rec_detail' pk=delivery.id %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <div id="lovoDiv" style="display: flex; align-items: stretch; display: none;">
+                    <div id="editable-div" 
+                         class="Am aiL Al editable LW-avf tS-tW" 
+                         hidefocus="true" 
+                         aria-label="Message Body" 
+                         g_editable="true" 
+                         role="textbox" 
+                         aria-multiline="true" 
+                         contenteditable="true" 
+                         tabindex="1" 
+                         itacorner="6,7:1,1,0,0" 
+                         spellcheck="false" 
+                         aria-owns=":wg" 
+                         aria-controls=":wg" 
+                         style="direction: ltr; 
+                                border: 1px solid #ccc; 
+                                padding: 10px; 
+                                outline: none; 
+                                flex-grow: 1;">
+                    </div>
+                    <input type="hidden" name="lovo" value="{{ delivery.id }}" id="lovo">
+                    <input type="hidden" name="lovo_url" value="" id="lovo_url">
+                    <input type="hidden" name="lovo_name" value="" id="lovo_name">
+                    <button id="parseButton" 
+                            class="btn btn-outline-secondary" 
+                            title="Submit Content" 
+                            style="border: 1px solid #ccc; padding: 0 10px;">
+                            <img src="{% static '/img/check-fat.svg' %}" alt="zaznacz status sprawdzony przez biuro">
+                    </button>
+                </div>
+            </form>
+            
+            <script>
+                // Функція для перемикання видимості блоку
+                function toggleLovoDiv() {
+                    var lovoDiv = document.getElementById("lovoDiv");
+                    if (lovoDiv.style.display === "none" || lovoDiv.style.display === "") {
+                        lovoDiv.style.display = "flex";
+                    } else {
+                        lovoDiv.style.display = "none";
+                    }
+                }
+        
+                // Додаємо слухача подій до кнопки
+                document.getElementById("lovoShowButton").addEventListener("click", toggleLovoDiv);
+        
+                // Функція для обробки контенту
+                function parseContent() {
+                    var divContent = document.getElementById("editable-div").innerHTML;
+                    
+                    var tempElement = document.createElement('div');
+                    tempElement.innerHTML = divContent;
+            
+                    var aTag = tempElement.querySelector('a');
+            
+                    if (aTag) {
+                        var lovoUrl = aTag.getAttribute('href');
+                        var lovoName = aTag.innerText;
+                        
+                        document.getElementById("lovo_url").value = lovoUrl;
+                        document.getElementById("lovo_name").value = lovoName;
+                    }
+                }
+            
+                document.getElementById("parseButton").addEventListener("click", function(event) {
+                    parseContent();
+                });
+            </script>
+   
+    <br>
+
+    {% if delivery.lovo_link  %}
+    <p class="alert alert-dark">Sprawa Lovo: 
+        <a target="_blank"
+        class="link-secondary" 
+        href={{delivery.lovo_link}}>
+        {{ delivery.lovo_name }}
+    </a> </p>
+    {% endif %}
+
+    <p class="alert alert-dark">Supplier Company: {{ delivery.supplier_company }}</p>
+    <p class="alert alert-dark">Numer zamówienia: {{ delivery.pre_advice_nr }}</p>
+    <p class="alert alert-dark">Data otrzymania: {{ date_recive }}</p>
+    <p class="alert alert-dark">Uzytkownik ktory przyjal towar: {{ delivery.user }}</p>
+    <p class="alert alert-dark">Lokalizacja przyjęciowa: {{ delivery.recive_location.name }}</p>
+    <p class="alert alert-dark">Obecna lokalizacja: {{ delivery.location }}</p>
+    <p class="alert alert-dark">Identyfikator: {{ delivery.identifier }}</p>
+
+
+    {% for image_path in image_urls %}
+        <img src="{{ image_path }}" alt="Nie mam obrazów" style="width: 100%;">
+        <p>{{image.image_data}}</p>
+        <!-- Populate options from database if needed -->
+    {% endfor %}
+
+    <form action="{% url 'delivery_stock:add_image'%}" method="get"  style="display: inline;">
+        {% csrf_token %}
+        <input type="hidden", name="delivery_id", value="{{ delivery.id }}">
+        <input type="hidden", name="back_to_detail", value="{{delivery.id}}"> 
+        <button type="submit" class="btn btn-outline-secondary" title="Dodaj zdjęcia" style="width: 100%; padding: 0; margin: 0;">
+            <img src="{% static '/img/camera.svg' %}" alt="">
+        </button>
+    </form>
+   
+    {% comment %} <input type="submit" value="Submit"> {% endcomment %}
+    <!-- Editable div for new field -->
+    
+</div>
+{% endblock %}

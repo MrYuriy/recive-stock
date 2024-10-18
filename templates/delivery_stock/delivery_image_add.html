@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+
+
+
+{% block content %}
+<form method="post" action="{% url 'delivery_stock:add_image' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="obj_id" id="obj_id" value="{{ obj_id }}" required>
+    <input type="hidden" name="back_to_detail" id="back_to_detail" value="{{ back_to_detail }}">
+    <input type="hidden" name="obj_model" id="obj_model" value="{{ obj_model }}">
+
+    <div class="mb-3" id="imag-fields">
+        <input name="images_url_1" class="form-control" type="file" id="formFileMultiple">
+        <button type="button" onclick="addImageField()" style="width: 100%;">+</button>
+    </div>
+
+
+    <input class="btn btn-secondary" type="submit" value="Kontynuować" style="width: 100%;"> 
+</form>
+
+
+<script>
+    function addImageField(){
+        const imageFieldContainer = document.getElementById('imag-fields');
+        const fieldCount = imageFieldContainer.childElementCount;
+        
+        const newImageField = document.createElement('div');
+        newImageField.className = 'mb-3';
+
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.className = "form-control";
+        fileInput.name = `images_url_${fieldCount}`;
+        fileInput.style.width = '100%';
+        fileInput.style.marginTop = "15px";
+
+        // Insert the new container before the button
+        imageFieldContainer.insertBefore(newImageField, imageFieldContainer.lastElementChild);
+
+        // Append new inputs to the container
+        newImageField.appendChild(fileInput);
+
+    }
+
+
+
+</script>    
+{% endblock %}

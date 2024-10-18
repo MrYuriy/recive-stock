@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load crispy_forms_filters %}
+{% load static %}
+{% block navigation %}
+    <nav class="navigation">
+        <a class="btn btn-secondary" role="button" href="{% url 'delivery_stock:home' %}">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:sku_list' %}">
+            <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+        </a>
+    </nav>
+    <br>
+{% endblock %}
+
+{% block content %}
+<form method="post" action="{% url 'delivery_stock:sku_create' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">SKU: </span>
+        <input type="number" style="width: 65%;" name="sku" required>
+    </div>
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">Barcode: </span>
+        <input type="text" style="width: 65%;" name="barcode" required>
+    </div>
+    <div class="input-group mb-3" type="number">
+        <span class="input-group-text" style="width: 35%;">Deskription: </span>
+        <input type="text" style="width: 65%;" name="deskription" required>
+    </div>
+
+
+
+    <button type="submit" style="width: 100%;">Create</button>
+</form>
+
+{% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+{% endif %}
+
+{% endblock %}

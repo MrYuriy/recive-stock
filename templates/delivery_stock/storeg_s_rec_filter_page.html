@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load crispy_forms_filters %}
+{% load static %}
+{% block navigation %}
+    <nav class="navigation">
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:select_store_receprion' %}" title="Wróć">
+            <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
+        </a>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <form method="post" action="{% url 'delivery_stock:store_second_rec' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="input-group mb-3">
+        <select name="status" class="form-select">
+            <option  disabled selected value="" >Wybierz Status</option>
+            <option value=1>Przyjęty</option>
+            <option value=2>Magazynowane</option>
+            <option value=3>Do wysyłki</option>
+        </select>
+        </div>
+
+        <div class="input-group mb-3" type="number">
+            <input type="number" name="identifier" style="width: 100%;" placeholder="Identyfikator">
+        </div>
+
+        <div class="input-group mb-3" type="number">
+            <span class="input-group-text" id="inputGroup-sizing-default">Data: </span>
+            <input type="date" name="date_recive" class="form-control" aria-describedby="inputGroup-sizing-default">
+        </div>
+
+        <div class="input-group mb-3" type="number">
+            <input type="text" name="location" style="width: 100%;" placeholder="Lokalizacja">
+        </div>
+
+        <div class="input-group mb-3">
+
+        </div>
+        
+        <input class="btn btn-secondary" type="submit" value="Submit" style="width: 100%;"> 
+    </form>
+{% endblock %}
