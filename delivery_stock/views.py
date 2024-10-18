@@ -382,16 +382,16 @@ class DeliveryStorSecondRecView(LoginRequiredMixin, View):
         )
 
         if status and status != "None":
-            queryset = queryset.filter(location__work_zone=status)
+            queryset = queryset.filter(container__location__work_zone=status)
         if identifier and identifier != "None":
-            queryset = queryset.filter(identifier__icontains=identifier)
+            queryset = queryset.filter(container__identifier__icontains=identifier)
         if date_recive and date_recive != "None":
             date_recive_dt = datetime.strptime(date_recive, "%Y-%m-%d")
             queryset = queryset.filter(
                 container__delivery__date_recive__date=date_recive_dt
             )
         if location and location != "None":
-            queryset = queryset.filter(location__name__icontains=location)
+            queryset = queryset.filter(container__location__name__icontains=location)
 
         page = request.POST.get("page", 1)
         paginator = Paginator(

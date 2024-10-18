@@ -16,14 +16,14 @@
     <form method="post" action="{% url 'delivery_stock:store_first_rec' %}" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <div class="input-group mb-3">
+        {% comment %} <div class="input-group mb-3">
         <select name="status" class="form-select">
             <option  disabled selected value="" >Wybierz Status</option>
             <option value=1>Przyjęty</option>
             <option value=2>Magazynowane</option>
             <option value=3>Do wysyłki</option>
         </select>
-        </div>
+        </div> {% endcomment %}
 
         <div class="input-group mb-3" type="number">
             <input type="number" name="identifier" style="width: 100%;" placeholder="Identyfikator">
