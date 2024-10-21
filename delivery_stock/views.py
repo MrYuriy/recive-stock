@@ -267,7 +267,7 @@ class ContainerLineView(LoginRequiredMixin, View):
 
 
 class DeliveryImageAddView(LoginRequiredMixin, View):
-    template_name = "delivery_stock/image_add.html"
+    template_name = "delivery_stock/delivery_image_add.html"
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -291,16 +291,22 @@ class DeliveryImageAddView(LoginRequiredMixin, View):
         back_to_detail = self.request.POST.get("back_to_detail")
         # Отримати модель динамічно
         ModelClass = globals().get(obj_model)
-
         if ModelClass is None:
             return HttpResponseBadRequest(f"Unknown model: {obj_model}")
         obj = ModelClass.objects.get(id=obj_id)
-
         if request.FILES:
-            save_images_for_object(request, obj, obj.identifier)
+            try:
+                prefix = obj.identifier
+            except:
+                prefix = obj.container.identifier
+            save_images_for_object(request, obj, prefix)
 
         if back_to_detail:
-            return redirect(f"{obj_model.lower()}_detail", pk=obj_id)
+            if obj_model == "FirstRecDelivery":
+                return redirect(f"delivery_stock:delivery_f_rec_detail", pk=obj_id)
+            
+            if obj_model == "ContainerLine":
+                return redirect(f"delivery_stock:container_detail", pk=obj.container.id)
         return render(request, "delivery_stock/select_reception.html")
 
 
@@ -532,6 +538,7 @@ class ContainerDetailView(LoginRequiredMixin, View):
         for line in container.containerline_set.all():
             lines_data.append(
                 {
+                    "id": line.id,
                     "line_nr": line.line_nr,
                     "reasone_comment": line.reasone_comment,
                     "qty_unit": line.qty_unit,

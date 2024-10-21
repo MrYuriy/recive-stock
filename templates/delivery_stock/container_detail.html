@@ -90,6 +90,16 @@
             <br><br>
         {% endfor %}
         {% endif %}
+        <form action="{% url 'delivery_stock:add_image'%}" method="get"  style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden", name="obj_id", value="{{ line.id }}">
+            <input type="hidden", name="back_to_detail", value="{{line.id}}">
+            <input type="hidden", name="obj_model", value="ContainerLine">
+    
+            <button type="submit" class="btn btn-outline-secondary" title="Dodaj zdjęcia" style="width: 100%; padding: 0; margin: 0;">
+                <img src="{% static '/img/camera.svg' %}" alt="">
+            </button>
+        </form>
     </div>
     {% endfor %}
 </div>
