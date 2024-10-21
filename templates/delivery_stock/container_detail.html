@@ -17,6 +17,17 @@
             <img src="{% static '/img/file-pdf.svg' %}" alt="wygeneruj raport uszkodzeń PDF">
         </button>
     </form>
+
+    <form action="{% url 'delivery_stock:container_detail' pk=container_id%}" method="post"  style="display: inline; float: right;">
+        {% csrf_token %}
+        <input type="hidden" name="container_id" value="{{ container_id }}">
+        <input type="hidden" name="reprint_label" value="{{ container_id }}">
+
+        <button type="submit" class="btn btn-outline-secondary" title="wygeneruj raport uszkodzeń PDF">
+            <img src="{% static '/img/printer.svg' %}" alt="wygeneruj raport uszkodzeń PDF">
+        </button>
+    </form>
+
     <button id="toggleTirSection" class="btn btn-outline-secondary" title="Add tir nr">
         <img src="{% static '/img/textbox.svg' %}" alt="add tir nr">
     </button>

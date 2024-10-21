@@ -566,10 +566,13 @@ class ContainerDetailView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         container_id = request.POST.get("container_id")
+        delivery = DeliveryContainer.objects.select_related('delivery').get(id=container_id).delivery
+                
         if request.POST.get("add_tir_nr"):
-                delivery = DeliveryContainer.objects.select_related('delivery').get(id=container_id).delivery
                 delivery.tir_nr = request.POST.get("TIR_NR")
                 delivery.save()
+        if request.POST.get("reprint_label"):
+            print_labels(delivery_id=delivery.id)
             
 
         return redirect("delivery_stock:container_detail", pk=container_id)
