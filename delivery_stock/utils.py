@@ -199,6 +199,10 @@ def get_transaction_cont_creat_str(request):
 def get_transaction_line_add_str(request, line_position):
     return f"{datetime.now().strftime('%Y-%d-%m')} Użytkownik {request.user.username} dodał nową linię {line_position} do kontenera \n"
 
+def get_transaction_line_repac_str(request, line_position):
+    return f"{datetime.now().strftime('%Y-%d-%m')} Użytkownik {request.user.username} przepakował linię {line_position} do kontenera \n"
+
+
 def do_split_line(old_line: ContainerLine, qty: int):
     """Split the container line into a new line if the new qty doesn't match future recive units."""
     # Create the new line without assigning the ManyToMany field 'images_url' initially
@@ -281,7 +285,7 @@ def create_new_container_from_current(current_cont, request):
 
 def do_repack(request):
     from_cont = request.POST.get("from_cont")
-    to_cont = request.POST.get("to_cont")
+    to_cont = int(request.POST.get("to_cont")or 0)
     line_id = request.POST.get("line_id")
     qty = int(request.POST.get("qty") or 0 )
 
@@ -327,7 +331,9 @@ def do_repack(request):
 
     # Update line and save
     cont_line.container = future_cont
-    cont_line.line_nr = ContainerLine.objects.filter(container=future_cont).aggregate(Max("line_nr"))["line_nr__max"] + 1
+    cont_line.line_nr = (ContainerLine.objects.filter(container=future_cont).aggregate(Max("line_nr"))["line_nr__max"] or 0) + 1
+    future_cont.transaction += get_transaction_line_repac_str(request, cont_line.line_nr)
+    future_cont.save()
     cont_line.save()
 
     return context

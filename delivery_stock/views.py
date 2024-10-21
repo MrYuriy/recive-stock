@@ -574,11 +574,14 @@ class DeliveryContainerRepacView(LoginRequiredMixin, View):
         return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
-        context = do_repack(request)
-        if "error_message" not in context:
-            return redirect("delivery_stock:repac_cont")
-        else:
-            return render(request, self.template_name, context)
+        # Ensuring that the transaction is atomic
+        with transaction.atomic():
+            context = do_repack(request)
+
+            if "error_message" not in context:
+                return redirect("delivery_stock:repac_cont")
+            else:
+                return render(request, self.template_name, context)
         
         
 
