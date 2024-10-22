@@ -337,3 +337,31 @@ def do_repack(request):
     cont_line.save()
 
     return context
+
+
+def do_change_cintainer_type(request):
+    identifier = request.POST.get("identifier")
+    new_unit = request.POST.get("tape_of_unit")
+    line_id = request.POST.get("line_id")
+
+    context = {}
+
+    current_cont = get_container_by_identifier(identifier)
+    if not current_cont:
+        context["error_message"] = "Kontener nie istnieje"
+        return context
+    
+    cont_lines = ContainerLine.objects.filter(container=current_cont)
+    cont_line = cont_lines.filter(line_nr=line_id).first()
+    
+    if new_unit=="pall.full." and len(cont_lines) > 1:
+        context["error_message"] = "Kontener zawiera więcej niż jedną linię"
+        return context
+    if not cont_line:
+        context["error_message"] = "Podany numer linii nie istnieje"
+        return context
+
+    cont_line.recive_unit = new_unit
+    cont_line.save()    
+
+    return context

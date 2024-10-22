@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load crispy_forms_filters %}
+{% load static %}
+
+{% block navigation %}
+    <nav class="navigation">
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+            <img src="{% static '/img/house.svg' %}" alt="Do główną">
+        </a>
+    </nav>
+{% endblock %}
+
+{% block content %}
+<a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+    role="button" href="{% url 'delivery_stock:repac_cont' %}" 
+    style="font-size: 30px; padding: 10px;">Repac 
+</a>
+<br>
+<a class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+role="button" href="{% url 'delivery_stock:update_type_cont' %}?reception=second"
+style="font-size: 40px; padding: 10px;">Zmiana typu palety</a>
+<br>
+<br>
+{% endblock %}

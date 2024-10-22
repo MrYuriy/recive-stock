@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views import View
 
-from delivery_stock.utils import do_repack, gen_damage_protocol, gen_pdf_recive_report, get_transaction_cont_creat_str, get_transaction_line_add_str, relocate_or_get_error, save_images_for_object, print_labels
+from delivery_stock.utils import do_change_cintainer_type, do_repack, gen_damage_protocol, gen_pdf_recive_report, get_transaction_cont_creat_str, get_transaction_line_add_str, relocate_or_get_error, save_images_for_object, print_labels
 from recive_stock.settings import GS_BUCKET_NAME
 from .models import (
     ContainerLine,
@@ -47,6 +47,13 @@ class SelectReceptionView(LoginRequiredMixin, View):
 
 class SelectStoreReceptionView(LoginRequiredMixin, View):
     template_name = "delivery_stock/select_store_reception.html"
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+    
+
+class SelectContainerMenagerView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/select_container_opreration.html"
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
@@ -592,9 +599,27 @@ class DeliveryContainerRepacView(LoginRequiredMixin, View):
                 return redirect("delivery_stock:repac_cont")
             else:
                 return render(request, self.template_name, context)
-        
-        
 
+
+class ContainreTypeUpdateView(LoginRequiredMixin, View):
+    template_name = "delivery_stock/change_container_type.html"
+    def get_context_data(self, **kwargs):
+        context = {}
+        context["recive_units"] = [unit[0] for unit in ContainerLine.RECIVE_UNIT]
+        return context
+    
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context=context)
+    
+    def post(self, request, *args, **kwargs):
+        context = do_change_cintainer_type(request)
+        context.update(self.get_context_data())
+        if "error_message" not in context:
+                return redirect("delivery_stock:update_type_cont")
+        else:
+            return render(request, self.template_name, context)
+        
 
 class SupplierListView(LoginRequiredMixin, View):
     template_name = "delivery_stock/supplier_list.html"

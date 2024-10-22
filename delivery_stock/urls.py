@@ -2,6 +2,7 @@ from django.urls import path
 
 from delivery_stock.views import (
     ContainerDetailView,
+    ContainreTypeUpdateView,
     DeleveryFirsRecDetailView,
     DeliveryContainerRepacView,
     DeliveryFirsrRecCreateView, 
@@ -18,6 +19,7 @@ from delivery_stock.views import (
     LocationUpdateView,
     RelocationView, SelectReceptionView,
     SelectStoreReceptionView,
+    SelectContainerMenagerView,
     SuplierSKUCreateView,
     SupplierCreateView,
     SupplierListView,
@@ -33,10 +35,12 @@ urlpatterns = [
     path("", HomeView.as_view(), name="home"),
     path("reception/", SelectReceptionView.as_view(), name="select_receprion"),
     path("store-reception/", SelectStoreReceptionView.as_view(), name="select_store_receprion"),
+    path("container-menager/", SelectContainerMenagerView.as_view(), name="selekt_container_menager"),
     path("first-rec/create/", DeliveryFirsrRecCreateView.as_view(), name="first_rec_del_create"),
     path("second-rec/create/", DeliverySecondRecCreateView.as_view(), name="second_rec_del_create"),
     path("add-delivery-container/", DeliveryContainerView.as_view(), name="add_delivery_cont"),
     path("repac-delivery-container", DeliveryContainerRepacView.as_view(), name="repac_cont"),
+    path("update-type-delivery-container", ContainreTypeUpdateView.as_view(), name="update_type_cont"),
     path("print-report/", gen_first_rec_pdf_report, name="generaport"),
     path("print-damage-protocol", gen_damage_pdf_protocol, name="gen_damage_report"),
     path("add-container-line/", ContainerLineView.as_view(), name="add_cont_line"),
