@@ -4,13 +4,14 @@
 <div class="btn-group flex-container">
 {% block navigation %}
     <nav class="navigation">
-        {% comment %} <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
+        {% comment %} 
+        <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:home' %}" title="Do główną">
             <img src="{% static '/img/house.svg' %}" alt="Do główną">
         </a>
         <a class="btn btn-outline-secondary" role="button" href="{% url 'delivery_stock:select_receprion' %}" title="Wróć">
             <img src="{% static '/img/arrow-bend-up-left.svg' %}" alt="Wróć">
         </a>
-         {% endcomment %}
+        {% endcomment %}
     </nav>
 {% endblock %}
 
@@ -21,45 +22,45 @@
     <input type="hidden" name="delivery_id" id="delivery_id" value={{ delivery_id }} required>
     <input type="hidden" name="delivery_cont_id" id="delivery_cont_id" value={{ delivery_cont_id }} required>
 
-    
-    <div class="input-group mb-3" type="number">
+    <div class="input-group mb-3">
         <select id="tape_of_unit" name="tape_of_unit" class="form-select" required>
-            <option  disabled selected value="" >Jednostka*</option>
+            <option disabled selected value="">Jednostka*</option>
             {% for unit in recive_units %}
                 <option value="{{ unit }}">{{ unit }}</option>
             {% endfor %}
         </select> 
     </div>
 
-    <div class="input-group mb-3" type="number", >
+    <div class="input-group mb-3">
         <select id="reasones" name="reasones" class="form-select" onchange="toggleEANField()" required>
-            <option  disabled selected value="" >Wybierz powód*</option>
+            <option disabled selected value="">Wybierz powód*</option>
             {% for reasone in reasones %}
                 <option value="{{ reasone.name }}">{{ reasone.name }}</option>
             {% endfor %}
         </select>
     </div>
 
-    <div class="input-group mb-3" type="number" id="ean-field">
+    <div class="input-group mb-3" id="ean-field">
         <span class="input-group-text" style="width: 35%;">EAN: </span>
-        <input type="number" style="width: 65%;" name="ean">
+        <input type="number" style="width: 65%;" name="ean" required>
     </div>
 
-    <div class="input-group mb-3" type="number">
-        <span class="input-group-text" style="width: 35%;" >QTY*: </span>
+    <div class="input-group mb-3">
+        <span class="input-group-text" style="width: 35%;">QTY*: </span>
         <input type="number" style="width: 65%;" name="qty_unit" required>
     </div>
     
-
     <div class="mb-3" id="imag-fields">
         <input name="images_url_1" class="form-control" type="file" id="formFileMultiple">
         <button type="button" onclick="addImageField()" style="width: 100%;">+</button>
     </div>
-    {% comment %} <div class="input-group mb-3" type="number", >
-        <input name="extra_comment" type="text" class="form-control" placeholder="Co dalej stało się z produktem?">
-    </div> {% endcomment %}
 
-        <input class="btn btn-secondary" type="submit" value="Submit" style="width: 100%;"> 
+    <div class="input-group mb-3" id="extra-comment-field">
+        <span class="input-group-text" style="width: 35%;">Extra Comment: </span>
+        <input name="extra_comment" type="text" class="form-control" placeholder="wpisz jaki to rodzaj produktu">
+    </div>
+
+    <input class="btn btn-secondary" type="submit" value="Submit" style="width: 100%;"> 
 </form>
 
 {% if error_message %}
@@ -69,17 +70,44 @@
 {% endif %}
 
 <script>
-    function toggleEANField() {
-        const reasonesSelect = document.getElementById('reasones');
-        const eanField = document.getElementById('ean-field');
-        
-        if (reasonesSelect.value === 'brak kodu ean') {
-            eanField.style.display = 'none';
-        } else {
-            eanField.style.display = 'flex';
-        }
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        const eanInput = document.querySelector('input[name="ean"]');
+        const extraCommentField = document.querySelector('input[name="extra_comment"]');
+        const formGroup = extraCommentField.closest('.input-group');
 
+        // Сховати поле extra_comment на початку
+        formGroup.style.display = 'none';
+
+        eanInput.addEventListener('input', function () {
+            const eanValue = eanInput.value.trim();
+
+            if (eanValue) {
+                // Формування URL для AJAX-запиту
+                const url = "/delivery-stock/api/supplier-sku/" + eanValue + "/";
+
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        if (xhr.status === 200) {
+                            // SKU існує, приховуємо extra_comment
+                            formGroup.style.display = 'none';
+                            extraCommentField.required = false;
+                        } else {
+                            // SKU не знайдено, показуємо extra_comment і робимо обов'язковим
+                            formGroup.style.display = 'flex';
+                            extraCommentField.required = true;
+                        }
+                    }
+                };
+                xhr.send();
+            } else {
+                // Якщо поле EAN порожнє, приховуємо поле коментарів
+                formGroup.style.display = 'none';
+                extraCommentField.required = false;
+            }
+        });
+    });
 
     function addImageField(){
         const imageFieldContainer = document.getElementById('imag-fields');
@@ -91,20 +119,14 @@
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.className = "form-control";
-        fileInput.name = `images_url_${fieldCount}`;
+        fileInput.name = `images_url_${fieldCount}`; // Динамічне ім'я для нових полів
         fileInput.style.width = '100%';
         fileInput.style.marginTop = "15px";
 
-        // Insert the new container before the button
+        // Додати нове поле перед кнопкою
         imageFieldContainer.insertBefore(newImageField, imageFieldContainer.lastElementChild);
-
-        // Append new inputs to the container
         newImageField.appendChild(fileInput);
-
     }
+</script>
 
-
-
-</script>    
-    
 {% endblock %}

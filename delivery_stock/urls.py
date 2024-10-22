@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 
 from delivery_stock.views import (
     ContainerDetailView,
@@ -33,6 +33,7 @@ from delivery_stock.views import (
 
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
+    path("api/", include("delivery_stock.api.urls")),
     path("reception/", SelectReceptionView.as_view(), name="select_receprion"),
     path("store-reception/", SelectStoreReceptionView.as_view(), name="select_store_receprion"),
     path("container-menager/", SelectContainerMenagerView.as_view(), name="selekt_container_menager"),
