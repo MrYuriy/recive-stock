@@ -177,6 +177,7 @@ class ContainerLine(models.Model):
     container = models.ForeignKey(DeliveryContainer, on_delete=models.CASCADE)
     images_url = models.ManyToManyField(ImageModel, blank=True)
     line_nr = models.IntegerField(default=1)
+    alternative_product_name = models.CharField(max_length=140, blank=True, null=True)
 
 
     def __str__(self) -> str:

@@ -56,8 +56,8 @@
     </div>
 
     <div class="input-group mb-3" id="extra-comment-field">
-        <span class="input-group-text" style="width: 35%;">Extra Comment: </span>
-        <input name="extra_comment" type="text" class="form-control" placeholder="wpisz jaki to rodzaj produktu">
+        <span class="input-group-text" style="width: 35%;">Opis: </span>
+        <input name="alternative_product_name" type="text" class="form-control" placeholder="Alternatywna nazwa produktu:">
     </div>
 
     <input class="btn btn-secondary" type="submit" value="Submit" style="width: 100%;"> 
@@ -71,43 +71,45 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const eanInput = document.querySelector('input[name="ean"]');
-        const extraCommentField = document.querySelector('input[name="extra_comment"]');
-        const formGroup = extraCommentField.closest('.input-group');
+    const eanInput = document.querySelector('input[name="ean"]');
+    const alternativeProductName = document.querySelector('input[name="alternative_product_name"]');
+    const formGroup = alternativeProductName.closest('.input-group');
 
-        // Сховати поле extra_comment на початку
-        formGroup.style.display = 'none';
+    // Сховати поле alternative_product_name на початку
+    formGroup.style.display = 'flex';
+    alternativeProductName.required = true;
 
-        eanInput.addEventListener('input', function () {
-            const eanValue = eanInput.value.trim();
+    eanInput.addEventListener('input', function () {
+        const eanValue = eanInput.value.trim();
 
-            if (eanValue) {
-                // Формування URL для AJAX-запиту
-                const url = "/delivery-stock/api/supplier-sku/" + eanValue + "/";
+        if (eanValue) {
+            // Формування URL для AJAX-запиту
+            const url = "/delivery-stock/api/supplier-sku/" + eanValue + "/";
 
-                const xhr = new XMLHttpRequest();
-                xhr.open("GET", url, true);
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === XMLHttpRequest.DONE) {
-                        if (xhr.status === 200) {
-                            // SKU існує, приховуємо extra_comment
-                            formGroup.style.display = 'none';
-                            extraCommentField.required = false;
-                        } else {
-                            // SKU не знайдено, показуємо extra_comment і робимо обов'язковим
-                            formGroup.style.display = 'flex';
-                            extraCommentField.required = true;
-                        }
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        // SKU існує, приховуємо alternative_product_name
+                        formGroup.style.display = 'none';
+                        alternativeProductName.required = false;
+                    } else {
+                        // SKU не знайдено, показуємо alternative_product_name і робимо обов'язковим
+                        formGroup.style.display = 'flex';
+                        alternativeProductName.required = true;
                     }
-                };
-                xhr.send();
-            } else {
-                // Якщо поле EAN порожнє, приховуємо поле коментарів
-                formGroup.style.display = 'none';
-                extraCommentField.required = false;
-            }
-        });
+                }
+            };
+            xhr.send();
+        } else {
+            // Якщо поле EAN порожнє, показуємо alternative_product_name і робимо обов'язковим
+            formGroup.style.display = 'flex';
+            alternativeProductName.required = true;
+        }
     });
+});
+
 
     function addImageField(){
         const imageFieldContainer = document.getElementById('imag-fields');

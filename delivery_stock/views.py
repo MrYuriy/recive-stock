@@ -226,7 +226,7 @@ class ContainerLineView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         delivery_id = request.POST.get("delivery_id")
         delivery_cont_id = request.POST.get("delivery_cont_id")
-
+        alternative_product_name = (request.POST.get("alternative_product_name") or None)
         unit_type = request.POST.get("tape_of_unit")
         qty = request.POST.get("qty_unit")
         ean = request.POST.get("ean")
@@ -247,12 +247,11 @@ class ContainerLineView(LoginRequiredMixin, View):
                 line_position = 1
                 container.transaction += get_transaction_cont_creat_str(request)
                 container.save()
+        supplier_sku = None
+        if not alternative_product_name :   
+            supplier_sku = (
+                SuplierSKU.objects.filter(barcode__icontains=ean).first())
             
-        supplier_sku = (
-            SuplierSKU.objects.filter(barcode__icontains=ean).first()
-            if ean != ""
-            else None
-        )
         cont_line = ContainerLine(
             reasone_comment=reason,
             qty_unit=qty,
@@ -261,6 +260,8 @@ class ContainerLineView(LoginRequiredMixin, View):
             recive_unit=unit_type,
             line_nr=line_position,
             not_sys_barcode=ean if supplier_sku is None else None,
+            alternative_product_name=alternative_product_name if supplier_sku is None else None,
+
         )
         container.transaction += get_transaction_line_add_str(request, line_position)
         container.save()
@@ -554,6 +555,7 @@ class ContainerDetailView(LoginRequiredMixin, View):
                     "suplier_sku": line.suplier_sku.sku if line.suplier_sku else None,
                     "ean": line.suplier_sku.barcode if line.suplier_sku else None,
                     "deskription": line.suplier_sku.deskription if line.suplier_sku else None,
+                    "alternative_product_name": line.alternative_product_name,
                     "images_url": [
                         f"https://storage.googleapis.com/{GS_BUCKET_NAME}/{image.image_data}"
                         for image in line.images_url.all()
@@ -949,7 +951,7 @@ def gen_damage_pdf_protocol(request):
     for line in container.containerline_set.all():
         line_info = {}
         line_info["sku"] = line.suplier_sku.sku if line.suplier_sku else line.not_sys_barcode
-        line_info["description"] = line.suplier_sku.deskription if line.suplier_sku else " - - - - - -"
+        line_info["description"] = line.suplier_sku.deskription if line.suplier_sku else line.alternative_product_name
         line_info["qty"] = line.qty_unit
         line_info["recive_unit"] = line.recive_unit
         line_info["preadvice"] = container.delivery.pre_advice_nr

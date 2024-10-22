@@ -120,7 +120,7 @@ def gen_damage_protocol(lines_info):
     my_canvas.drawString(170, 178, f"{lines_info[0]['date_complite']}")
     for line in lines_info:
         my_canvas.drawString(50, coordinate_Y, f"{line['sku']}")
-        my_canvas.drawString(142, coordinate_Y, line["description"][:25])
+        my_canvas.drawString(142, coordinate_Y, line["description"][:22])
         my_canvas.drawString(300, coordinate_Y, f"{line['qty']}")
         my_canvas.drawString(350, coordinate_Y, line["recive_unit"])
         my_canvas.drawString(450, coordinate_Y, line["preadvice"])
@@ -149,7 +149,7 @@ def save_images_for_object(request, obj, prefix):
 def get_line_info(line):
     if line.suplier_sku:
         return f"SKU: {line.suplier_sku.sku} QTY: {line.qty_unit} Jednostka: {line.recive_unit} & Description: {line.suplier_sku.deskription}"
-    return f"QTY: {line.qty_unit} Jednostka: {line.recive_unit} &EAN: {line.not_sys_barcode}"
+    return f"QTY: {line.qty_unit} Jednostka: {line.recive_unit} &EAN: {line.not_sys_barcode} Description: {line.alternative_product_name}"
 
 
 def print_labels(delivery_id):

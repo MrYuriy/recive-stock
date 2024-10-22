@@ -87,6 +87,9 @@
         {% if line.not_sys_barcode %}
             <p><strong>Kod kreskowy (nie systemowy):</strong> {{ line.not_sys_barcode }}</p>
         {% endif %}
+        {% if line.alternative_product_name %}
+            <p><strong>Opis:</strong> {{ line.alternative_product_name }}</p>
+        {% endif %}
         {% if line.suplier_sku %}
             <p><strong>SKU:</strong> {{ line.suplier_sku }}</p>
             <p><strong>Opis:</strong> {{ line.deskription }}</p>
